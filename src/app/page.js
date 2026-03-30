@@ -368,12 +368,16 @@ function scoreTone(score) {
   return { backgroundColor: "#ef4444" };
 }
 
-function statusFromScore(score, zeroCount) {
-  if (zeroCount > 0) return { title: "Not ready yet", message: "Some stuff is still marked never done. Booking a test now would be brave. Maybe a bit too brave." };
-  if (score >= 90) return { title: "Very test ready", message: "This is looking strong. Keep it tidy, keep it calm, don’t invent drama on test day." };
-  if (score >= 75) return { title: "Nearly there", message: "Close. A few weak spots still look capable of causing nonsense under pressure." };
-  if (score >= 55) return { title: "Getting there", message: "Solid progress, but the pass is not baked in yet. A few bits still need sorting properly." };
-  return { title: "Still building", message: "You’re on the road, but this is still more warm-up than victory lap." };
+function statusFromScore(score, zeroCount, completedCount, totalVisibleSkills) {
+  const ratio = totalVisibleSkills ? completedCount / totalVisibleSkills : 0;
+  if (completedCount === 0) return { title: "Let’s get going", message: "You’re right at the start, which is actually the fun bit. Get a few things ticked off and this will start feeling properly useful." };
+  if (ratio < 0.12) return { title: "You’re warming up", message: "A few bits are now in motion. Keep stacking the basics and this will start getting exciting quickly." };
+  if (ratio < 0.25) return { title: "Nice start", message: "You’ve got the wheels turning now. A few more bits ticked off and this starts giving you a much clearer picture." };
+  if (ratio < 0.4) return { title: "Building momentum", message: "This is starting to look like real progress now. Keep going and it’ll begin to feel much more joined up." };
+  if (ratio < 0.6) return { title: "Getting properly interesting", message: "You’re well past the early wobble stage now. Keep filling the gaps and this becomes ridiculously useful." };
+  if (ratio < 0.8) return { title: "You’re getting there", message: "There’s a lot to like here. Keep tidying the weaker bits and this starts looking very testable." };
+  if (zeroCount > 0) return { title: "Nearly there", message: "Loads is already in place. Finish off the untouched bits and you’ll have a much stronger all-round picture." };
+  return { title: "Flying now", message: "This is looking seriously strong. Keep it consistent and don’t let silly mistakes creep in." };
 }
 
 function calculateScoring(ratings, transmission) {
@@ -385,11 +389,14 @@ function calculateScoring(ratings, transmission) {
   const riskSkills = [];
   const strengthSkills = [];
   const sectionScores = [];
+  let lastCompletedSkill = null;
+  let lastCompletedSection = null;
 
   SYLLABUS.forEach((section, sectionIndex) => {
     let sectionEarned = 0;
     let sectionPossible = 0;
     let visibleSkills = 0;
+    let sectionCompletedCount = 0;
 
     section.modules.forEach((module) => {
       module.skills.forEach((skill, skillIndex) => {
@@ -408,14 +415,18 @@ function calculateScoring(ratings, transmission) {
 
         if (raw === 0) zeroCount += 1;
         if (raw === 1) oneCount += 1;
-        if (raw > 0) completedCount += 1;
+        if (raw > 0) {
+          completedCount += 1;
+          sectionCompletedCount += 1;
+          lastCompletedSkill = { id, skill: skill.name, module: module.title, section: section.title };
+        }
 
         if (raw <= 3) {
-          riskSkills.push({ id, skill: skill.name, module: module.title, rating: raw, severity: (5 - raw) * weightedPossible });
+          riskSkills.push({ id, skill: skill.name, module: module.title, section: section.title, rating: raw, severity: (5 - raw) * weightedPossible });
         }
 
         if (raw >= 4) {
-          strengthSkills.push({ id, skill: skill.name, module: module.title, rating: raw, strength: raw * weightedPossible });
+          strengthSkills.push({ id, skill: skill.name, module: module.title, section: section.title, rating: raw, strength: raw * weightedPossible });
         }
       });
     });
@@ -425,7 +436,10 @@ function calculateScoring(ratings, transmission) {
         id: section.id,
         title: section.title,
         score: Math.round((sectionEarned / sectionPossible) * 100),
+        completedCount: sectionCompletedCount,
+        visibleSkills,
       });
+      if (sectionCompletedCount > 0) lastCompletedSection = section.title;
     }
   });
 
@@ -443,7 +457,30 @@ function calculateScoring(ratings, transmission) {
   else if (foundationWeak >= 2) score = Math.max(0, score - 5);
 
   const totalVisibleSkills = SYLLABUS.flatMap((section) => section.modules).flatMap((module) => module.skills).filter((skill) => skill.transmissions.includes(transmission)).length;
-  const insightsUnlocked = completedCount >= 8;
+  const insightsUnlocked = completedCount >= 6;
+
+  const incompleteSections = sectionScores
+    .filter((section) => section.completedCount === 0)
+    .map((section) => ({ id: `section-${section.id}`, skill: section.title, module: "Whole section", section: section.title, severity: 9999 }));
+
+  const needToWorkOn = [...incompleteSections, ...riskSkills.sort((a, b) => b.severity - a.severity)]
+    .filter((item, index, arr) => arr.findIndex((x) => x.skill === item.skill) === index)
+    .slice(0, 2);
+
+  const doingWell = [];
+  if (lastCompletedSection) {
+    doingWell.push({ id: `section-${slugify(lastCompletedSection)}`, skill: lastCompletedSection, module: "Recently worked on", section: lastCompletedSection, strength: 1000 });
+  }
+  if (lastCompletedSkill && !doingWell.find((item) => item.skill === lastCompletedSkill.skill)) {
+    doingWell.push({ id: `skill-${lastCompletedSkill.id}`, skill: lastCompletedSkill.skill, module: lastCompletedSkill.module, section: lastCompletedSkill.section, strength: 900 });
+  }
+  strengthSkills
+    .sort((a, b) => b.strength - a.strength)
+    .forEach((item) => {
+      if (doingWell.length < 2 && !doingWell.find((x) => x.skill === item.skill)) {
+        doingWell.push(item);
+      }
+    });
 
   return {
     score,
@@ -452,10 +489,10 @@ function calculateScoring(ratings, transmission) {
     completedCount,
     totalVisibleSkills,
     insightsUnlocked,
-    riskSkills: riskSkills.sort((a, b) => b.severity - a.severity).slice(0, 2),
-    strengthSkills: strengthSkills.sort((a, b) => b.strength - a.strength).slice(0, 2),
+    riskSkills: needToWorkOn,
+    strengthSkills: doingWell,
     sectionScores,
-    ...statusFromScore(score, zeroCount),
+    ...statusFromScore(score, zeroCount, completedCount, totalVisibleSkills),
   };
 }
 
@@ -794,38 +831,39 @@ function Header({ page, setPage, saveState, profile, updateTransmission, signOut
   ];
 
   return (
-    <header className="mb-4 rounded-[24px] border bg-white/95 backdrop-blur shadow-[0_10px_40px_rgba(71,119,143,0.10)] sm:mb-6 sm:rounded-[28px]" style={{ borderColor: BRAND.border }}>
-      <div className="flex flex-col gap-4 px-4 py-4 sm:px-5 sm:py-5 xl:flex-row xl:items-center xl:justify-between">
+    <header className="mb-6 rounded-[28px] border bg-white/95 backdrop-blur shadow-[0_10px_40px_rgba(71,119,143,0.10)]" style={{ borderColor: BRAND.border }}>
+      <div className="flex flex-col gap-4 px-5 py-5 xl:flex-row xl:items-center xl:justify-between">
         <div>
           <div className="mb-2 inline-flex items-center gap-3 rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.25em]" style={{ backgroundColor: BRAND.blueLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}>
             <img src={LOGO_URL} alt="Driving School TV logo" className="h-8 w-8 rounded-full" />
             <span>Driving School TV</span>
           </div>
-          <h1 className="text-xl font-black tracking-tight sm:text-3xl" style={{ color: BRAND.navy }}>Instructor In Your Pocket</h1>
+          <h1 className="text-2xl font-black tracking-tight sm:text-3xl" style={{ color: BRAND.navy }}>Instructor In Your Pocket</h1>
           <p className="mt-1 text-sm sm:text-base" style={{ color: BRAND.slate }}>
-            Hello {profile.name || "learner"}. Driving test progress tracker
+            Hello {profile.name || "learner"}
           </p>
         </div>
 
         <div className="flex flex-col gap-3 xl:items-end">
-          <nav className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-            {navItems.map((item) => {
-              const active = page === item.id;
-              return (
-                <button key={item.id} onClick={() => setPage(item.id)} className="rounded-2xl px-4 py-2 text-sm font-bold transition" style={active ? { backgroundColor: BRAND.navy, color: BRAND.white } : { backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}>
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-            <TransmissionToggle transmission={profile.transmission} updateTransmission={updateTransmission} compact />
+          <div className="flex w-full items-start justify-between gap-3 xl:justify-end">
+            <nav className="flex flex-wrap gap-2">
+              {navItems.map((item) => {
+                const active = page === item.id;
+                return (
+                  <button key={item.id} onClick={() => setPage(item.id)} className="rounded-2xl px-4 py-2 text-sm font-bold transition" style={active ? { backgroundColor: BRAND.navy, color: BRAND.white } : { backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}>
+                    {item.label}
+                  </button>
+                );
+              })}
+            </nav>
+            <button className="rounded-full px-2.5 py-1 text-[11px] font-bold shrink-0" style={{ backgroundColor: BRAND.yellowLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }} onClick={signOut}>
+              Sign out
+            </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 justify-end">
             <div className="rounded-full px-3 py-1 text-xs font-semibold" style={{ backgroundColor: BRAND.blueLight, color: BRAND.slate }}>
               {saveState}
             </div>
-            <button className="rounded-full px-3 py-1 text-xs font-bold" style={{ backgroundColor: BRAND.yellowLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }} onClick={signOut}>
-              Sign out
-            </button>
           </div>
         </div>
       </div>
@@ -833,7 +871,25 @@ function Header({ page, setPage, saveState, profile, updateTransmission, signOut
   );
 }
 
-function TransmissionToggle({ transmission, updateTransmission, compact = false }) {
+function TransmissionToggle({ transmission, updateTransmission, compact = false, disabled = false }) {
+  return (
+    <div className="flex items-center gap-2 rounded-full px-2 py-2" style={{ backgroundColor: BRAND.blueLight, border: `1px solid ${BRAND.border}` }}>
+      {[
+        { id: "manual", label: "Manual" },
+        { id: "automatic", label: "Automatic" },
+      ].map((item) => {
+        const selected = transmission === item.id;
+        return (
+          <button key={item.id} disabled={disabled} onClick={() => !disabled && updateTransmission(item.id)} className={`rounded-full font-bold ${compact ? "px-2.5 py-1 text-[11px]" : "px-4 py-2 text-sm"}`} style={selected ? { backgroundColor: BRAND.navy, color: BRAND.white } : { backgroundColor: BRAND.white, color: BRAND.navy }}>
+            {item.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function InsightCard({ transmission, updateTransmission, compact = false }) {
   return (
     <div className="flex items-center gap-2 rounded-full px-2 py-2" style={{ backgroundColor: BRAND.blueLight, border: `1px solid ${BRAND.border}` }}>
       {[
@@ -867,20 +923,25 @@ function InsightCard({ title, item, tone }) {
 function Dashboard({ setPage, scoring, profile }) {
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 lg:gap-6 lg:grid-cols-[1.15fr,0.85fr]">
-        <div className="overflow-hidden rounded-[24px] p-4 ring-1 sm:rounded-[32px] sm:p-8 shadow-[0_20px_60px_rgba(71,119,143,0.10)]" style={{ background: `linear-gradient(135deg, ${BRAND.white} 0%, ${BRAND.blueLight} 58%, ${BRAND.yellowLight} 100%)`, borderColor: BRAND.border }}>
-          <p className="mb-2 text-sm font-black uppercase tracking-[0.28em]" style={{ color: BRAND.navy }}>Learner profile</p>
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+      <section className="grid gap-6 lg:grid-cols-[1.15fr,0.85fr]">
+        <div className="overflow-hidden rounded-[32px] p-6 ring-1 sm:p-8 shadow-[0_20px_60px_rgba(71,119,143,0.10)]" style={{ background: `linear-gradient(135deg, ${BRAND.white} 0%, ${BRAND.blueLight} 58%, ${BRAND.yellowLight} 100%)`, borderColor: BRAND.border }}>
+          <div className="flex items-start justify-between gap-3">
             <div>
+              <p className="mb-2 text-sm font-black uppercase tracking-[0.28em]" style={{ color: BRAND.navy }}>Learner profile</p>
               <p className="text-sm font-bold" style={{ color: BRAND.slate }}>Hello {profile.name || "learner"}</p>
-              <h2 className="text-4xl font-black tracking-tight sm:text-7xl" style={{ color: BRAND.navy }}>{scoring.score}%</h2>
+            </div>
+            <TransmissionToggle transmission={profile.transmission} updateTransmission={() => {}} compact disabled />
+          </div>
+          <div className="mt-4 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-5xl font-black tracking-tight sm:text-7xl" style={{ color: BRAND.navy }}>{scoring.score}%</h2>
               <p className="mt-2 text-2xl font-black">{scoring.title}</p>
               <p className="mt-3 max-w-xl text-sm leading-6 sm:text-base" style={{ color: BRAND.slate }}>{scoring.message}</p>
             </div>
-            <div className="rounded-[22px] p-4 sm:rounded-[28px] sm:p-5 shadow-sm backdrop-blur ring-1" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
+            <div className="rounded-[28px] p-5 shadow-sm backdrop-blur ring-1" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
               <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.slate }}>Just so you know</p>
-              <p className="mt-2 max-w-[220px] text-sm leading-6" style={{ color: BRAND.slate }}>
-                You’ve ticked off {scoring.completedCount} of {scoring.totalVisibleSkills} things so far. You’re warming up nicely — this is where it starts getting interesting.
+              <p className="mt-2 max-w-[240px] text-sm leading-6" style={{ color: BRAND.slate }}>
+                {scoring.message}
               </p>
             </div>
           </div>
@@ -892,7 +953,7 @@ function Dashboard({ setPage, scoring, profile }) {
           </div>
         </div>
 
-        <div className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
+        <div className="rounded-[32px] bg-white p-6 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>Pass insights</p>
           {!scoring.insightsUnlocked ? (
             <div className="mt-4 rounded-3xl p-5 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
@@ -902,8 +963,8 @@ function Dashboard({ setPage, scoring, profile }) {
             </div>
           ) : (
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {scoring.riskSkills.map((item, index) => <InsightCard key={item.id} title={`Why you’d fail #${index + 1}`} item={item} tone="bad" />)}
-              {scoring.strengthSkills.map((item, index) => <InsightCard key={item.id} title={`Why you’d pass #${index + 1}`} item={item} tone="good" />)}
+              {scoring.riskSkills.map((item, index) => <InsightCard key={item.id} title={`Need to work on #${index + 1}`} item={item} tone="bad" />)}
+              {scoring.strengthSkills.map((item, index) => <InsightCard key={item.id} title={`Doing well #${index + 1}`} item={item} tone="good" />)}
             </div>
           )}
         </div>
@@ -911,7 +972,7 @@ function Dashboard({ setPage, scoring, profile }) {
 
       <section className="grid gap-4 md:grid-cols-3">
         <ActionCard title="Progress Tracker" copy="Update your progress without scrolling through a giant depressing wall of stuff." button="Update skills" onClick={() => setPage("progress tracker")} tone="blue" />
-        <ActionCard title="Ask Francis" copy="If you need help, ask me a question and I’ll answer." button="Ask a question" onClick={() => setPage("ask")} tone="yellow" />
+        <ActionCard title="Ask Francis" copy="If you need help ask me a question, I’ll answer." button="Ask a question" onClick={() => setPage("ask")} tone="yellow" />
         <ActionCard title="Community" copy="See what other learners are posting, passing, overthinking and arguing about." button="Open community" onClick={() => setPage("community")} tone="white" />
       </section>
     </div>
@@ -1063,24 +1124,31 @@ function SectionMiniScore({ section, ratings, transmission }) {
 function AskFrancisPage({ profile, scoring, tickets, newTicket, setNewTicket, submitTicket }) {
   return (
     <div className="space-y-6">
-      <section className="rounded-[24px] p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-8" style={{ background: `linear-gradient(135deg, ${BRAND.white} 0%, ${BRAND.blueLight} 55%, ${BRAND.yellowLight} 100%)`, borderColor: BRAND.border }}>
+      <section className="rounded-[32px] p-6 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:p-8" style={{ background: `linear-gradient(135deg, ${BRAND.white} 0%, ${BRAND.blueLight} 55%, ${BRAND.yellowLight} 100%)`, borderColor: BRAND.border }}>
         <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>Ask Francis</p>
-        <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-5xl" style={{ color: BRAND.navy }}>Need help\? Ask me\.</h2>
-        <p className="mt-4 max-w-3xl text-sm leading-7 sm:text-base" style={{ color: BRAND.slate }}>
-          If you need a hand, ask me. Faults, nerves, mock tests, roundabouts, your instructor, test day, whatever it is — send it over and I’ll get back to you. The more detail you give me, the more useful I can be.
-        </p>
+        <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-3xl font-black tracking-tight sm:text-5xl" style={{ color: BRAND.navy }}>Need help? Ask me.</h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 sm:text-base" style={{ color: BRAND.slate }}>
+              If you need a hand, ask me. Faults, nerves, mock tests, roundabouts, your instructor, test day, whatever it is — send it over and I’ll get back to you. The more detail you give me, the more useful I can be.
+            </p>
+          </div>
+          <div className="mx-auto w-36 shrink-0 overflow-hidden rounded-[28px] ring-1 sm:mx-0 sm:w-40" style={{ borderColor: BRAND.border }}>
+            <img src={FRANCIS_PHOTO_URL} alt="Francis" className="h-full w-full object-cover" />
+          </div>
+        </div>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <HeroPill title="Direct access" copy="Ask me the stuff you’d normally message me about." />
+          <HeroPill title="Direct access" copy="Ask me a question you need a driving instructor to answer. (Yes I’ll reply, not ai)" />
           <HeroPill title="Send links" copy="Feel free to send YouTube or social media links to illustrate your question." />
           <HeroPill title="Reply window" copy="Replies can take up to 24 hours, so don’t panic if it’s not instant." />
         </div>
       </section>
 
-      <div className="grid gap-4 xl:gap-6 xl:grid-cols-[1fr,1fr]">
-        <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
+      <div className="grid gap-6 xl:grid-cols-[1fr,1fr]">
+        <section className="rounded-[32px] bg-white p-6 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>Submit a question</p>
           <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
-            Hello {profile.name || "learner"}. Pop your question below. If a video helps explain it, feel free to send a link from YouTube, TikTok, Instagram, Facebook or anywhere else.
+            Hello {profile.name || "learner"}. Pop your question below. If a video helps explain it, feel free to send a link from YouTube, TikTok, Instagram, Facebook or anywhere else. Ask whatever you’d normally chuck into my Instagram DMs — just in a much more useful place.
           </p>
           <form onSubmit={submitTicket} className="mt-6 space-y-4">
             <div>
@@ -1098,7 +1166,7 @@ function AskFrancisPage({ profile, scoring, tickets, newTicket, setNewTicket, su
               <textarea
                 value={newTicket.message}
                 onChange={(e) => setNewTicket((prev) => ({ ...prev, message: e.target.value }))}
-                rows={5}
+                rows={8}
                 placeholder="Explain what happened, what you’re worried about, and what you want help with."
                 className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400"
                 style={{ borderColor: BRAND.border }}
@@ -1121,14 +1189,14 @@ function AskFrancisPage({ profile, scoring, tickets, newTicket, setNewTicket, su
                 It can take up to 24 hours for a reply. Your question will appear below like a support ticket, and replies will sit underneath once answered.
               </p>
             </div>
-            <button className="w-full sm:w-auto rounded-2xl px-4 py-3 text-sm font-bold" style={{ backgroundColor: BRAND.navy, color: BRAND.white }}>
+            <button className="rounded-2xl px-4 py-3 text-sm font-bold" style={{ backgroundColor: BRAND.navy, color: BRAND.white }}>
               Submit question
             </button>
           </form>
         </section>
 
         <section className="space-y-6">
-          <div className="rounded-[24px] p-4 shadow-[0_20px_60px_rgba(71,119,143,0.06)] ring-1 sm:rounded-[32px] sm:p-6" style={{ background: `linear-gradient(135deg, ${BRAND.blueLight} 0%, ${BRAND.white} 100%)`, borderColor: BRAND.border }}>
+          <div className="rounded-[32px] p-6 shadow-[0_20px_60px_rgba(71,119,143,0.06)] ring-1" style={{ background: `linear-gradient(135deg, ${BRAND.blueLight} 0%, ${BRAND.white} 100%)`, borderColor: BRAND.border }}>
             <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.slate }}>Your current context</p>
             <div className="mt-4 rounded-[28px] bg-white p-5 ring-1" style={{ borderColor: BRAND.border }}>
               <p className="text-4xl font-black" style={{ color: BRAND.navy }}>{scoring.score}%</p>
@@ -1139,7 +1207,7 @@ function AskFrancisPage({ profile, scoring, tickets, newTicket, setNewTicket, su
             </div>
           </div>
 
-          <div className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
+          <div className="rounded-[32px] bg-white p-6 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1" style={{ borderColor: BRAND.border }}>
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>Your ticket thread</p>
@@ -1148,7 +1216,7 @@ function AskFrancisPage({ profile, scoring, tickets, newTicket, setNewTicket, su
             </div>
             <div className="mt-4 space-y-4">
               {tickets.map((ticket) => (
-                <div key={ticket.id} className="rounded-[22px] p-4 sm:rounded-[28px] sm:p-5 ring-1" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
+                <div key={ticket.id} className="rounded-[28px] p-5 ring-1" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <h3 className="text-lg font-black">{ticket.subject}</h3>
