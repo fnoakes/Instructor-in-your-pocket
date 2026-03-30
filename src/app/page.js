@@ -41,6 +41,66 @@ const FRANCIS_PHOTO_URL = "https://static.wixstatic.com/media/18cc8c_0ec5f024246
 const TIPS_PLAYLIST_ID = "PLWV7lt2OClXJD_ud1evtxh42kQzdvSID3";
 const LEARN_PLAYLIST_ID = "PLWV7lt2OClXK8QHGz-Lxup6IXA0udWkjy";
 
+const TEST_CENTRE_VIDEOS = [
+  { centre: "Abergavenny", url: "https://youtu.be/roZxui9s6io" },
+  { centre: "Aylesbury", url: "https://youtu.be/GUf_60cBIGM" },
+  { centre: "Basildon", url: "https://youtu.be/sruH0Nlq8wc" },
+  { centre: "Bedford", url: "https://youtu.be/KuNbtZtloNw" },
+  { centre: "Bletchley", url: "https://youtu.be/R2QanYtF504" },
+  { centre: "Borehamwood", url: "https://youtu.be/OwtMZbRjIek" },
+  { centre: "Brecon", url: "https://youtu.be/QZXUnNh7yuU" },
+  { centre: "Bury St Edmunds", url: "https://youtu.be/-TKQKQOL_7k" },
+  { centre: "Cambridge", url: "https://youtu.be/DvVpMxwc6_8" },
+  { centre: "Cardiff", url: "https://youtu.be/1BmiM2_etlk" },
+  { centre: "Chelmsford", url: "https://youtu.be/oxo3VLmzkQI" },
+  { centre: "Chertsey", url: "https://youtu.be/8ES3Au9dOb4" },
+  { centre: "Chingford", url: "https://youtu.be/VjxBPvVqlko" },
+  { centre: "Clacton", url: "https://youtu.be/aIcvz0MN-fk" },
+  { centre: "Colchester", url: "https://youtu.be/1nnMKNwIzC8" },
+  { centre: "Coventry", url: "https://youtu.be/458gCRXMUog" },
+  { centre: "Crawley", url: "https://youtu.be/QnmrO3fTTXE" },
+  { centre: "Darlington", url: "https://youtu.be/DyvrqRjMXho" },
+  { centre: "Durham", url: "https://youtu.be/oPFAbkeRU8w" },
+  { centre: "Garretts Green", url: "https://youtu.be/4YH5D6zCvuU" },
+  { centre: "Gillingham", url: "https://youtu.be/WaEaCTpKb3A" },
+  { centre: "Goodmayes", url: "https://youtu.be/MMI06qvpyVQ" },
+  { centre: "Guildford", url: "https://youtu.be/zP3gfMwwobs" },
+  { centre: "Herne Bay", url: "https://youtu.be/3d2vH3QnUxU" },
+  { centre: "Hereford", url: "https://youtu.be/VSqdPm3oxS8" },
+  { centre: "Heysham", url: "https://youtu.be/_umAn_gFb7I" },
+  { centre: "Hornchurch", url: "https://youtu.be/b5bG5tbn9LI" },
+  { centre: "Isleworth", url: "https://youtu.be/SsDFXkVDkN8" },
+  { centre: "Kings Heath", url: "https://youtu.be/eEUcOoVFhxU" },
+  { centre: "Kingstanding", url: "https://youtu.be/_W43EUDeFuI" },
+  { centre: "Larne", url: "https://youtu.be/QoHXwASV7fg" },
+  { centre: "Leicester", url: "https://youtu.be/D5vsTFpGCjg" },
+  { centre: "Lisburn", url: "https://youtu.be/GFgkCMtk6oo" },
+  { centre: "Loughton", url: "https://youtu.be/hafvtPnQPO4" },
+  { centre: "Luton", url: "https://youtu.be/DwuGwNtG698" },
+  { centre: "Merthyr Tydfil", url: "https://youtu.be/I3f_MlOFh7I" },
+  { centre: "Monmouth", url: "https://youtu.be/19xmPdwEYHo" },
+  { centre: "Newtownards", url: "https://youtu.be/9880g4cARx8" },
+  { centre: "Northallerton", url: "https://youtu.be/-1i7o1DRDu0" },
+  { centre: "Northampton", url: "https://youtu.be/9DtV4HaabOo" },
+  { centre: "Norwich", url: "https://youtu.be/bGh61TUcrOE" },
+  { centre: "Nuneaton", url: "https://youtu.be/U3B6LDcikww" },
+  { centre: "Portsmouth", url: "https://youtu.be/OSa2bxpX19w" },
+  { centre: "Redhill Aerodrome", url: "https://youtu.be/CuXm5k5RUxw" },
+  { centre: "Shirley", url: "https://youtu.be/aSU_sjlLFgo" },
+  { centre: "Slough", url: "https://youtu.be/BBxzsbdEOQI" },
+  { centre: "South Yardley", url: "https://youtu.be/v4ye9BhkrvE" },
+  { centre: "Southall", url: "https://youtu.be/8eRm6xiH1Uc" },
+  { centre: "Southend", url: "https://youtu.be/F0VQJM3b9RM" },
+  { centre: "Speke", url: "https://youtu.be/T04qqylrmgg" },
+  { centre: "St Albans", url: "https://youtu.be/tycneWogvFc" },
+  { centre: "St Helens", url: "https://youtu.be/5TIGpwDdpr8" },
+  { centre: "Upton", url: "https://youtu.be/k6AiLNp1z7I" },
+  { centre: "Uxbridge", url: "https://youtu.be/p4bm1xjJpcI" },
+  { centre: "Warwick", url: "https://youtu.be/0BUVGfkJpbs" },
+  { centre: "Wolverhampton", url: "https://youtu.be/3og4C-s5YfI" },
+  { centre: "Worcester", url: "https://youtu.be/OWugehgqv2E" }
+];
+
 const SYLLABUS = [
   {
     id: "cockpit-controls",
@@ -347,6 +407,30 @@ function playlistCardEmbed(playlistId, index) {
   return `https://www.youtube-nocookie.com/embed?listType=playlist&list=${playlistId}&index=${index}`;
 }
 
+function getYoutubeEmbedUrl(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.includes("youtu.be")) {
+      const id = parsed.pathname.replace("/", "");
+      return `https://www.youtube-nocookie.com/embed/${id}`;
+    }
+    const id = parsed.searchParams.get("v");
+    return id ? `https://www.youtube-nocookie.com/embed/${id}` : url;
+  } catch {
+    return url;
+  }
+}
+
+function randomItems(items, count) {
+  const copy = [...items];
+  const picks = [];
+  while (picks.length < count && copy.length > 0) {
+    const idx = Math.floor(Math.random() * copy.length);
+    picks.push(copy.splice(idx, 1)[0]);
+  }
+  return picks;
+}
+
 function getLevelsForSkill(skill) {
   return skill.ratingType === "mock" ? MOCK_TEST_LEVELS : STANDARD_LEVELS;
 }
@@ -533,6 +617,8 @@ export default function App() {
   const [tickets, setTickets] = useState(STARTER_TICKETS);
   const [tipVideoIndices, setTipVideoIndices] = useState(() => randomIndices(4, 18));
   const [learnVideoIndices, setLearnVideoIndices] = useState(() => randomIndices(4, 18));
+  const [centreSearch, setCentreSearch] = useState("");
+  const [centreVideos, setCentreVideos] = useState(() => randomItems(TEST_CENTRE_VIDEOS, 4));
 
   useEffect(() => {
     try {
@@ -751,6 +837,14 @@ export default function App() {
                 rerollLearn={() => setLearnVideoIndices(randomIndices(4, 18))}
               />
             )}
+            {page === "centres" && (
+              <TestCentresPage
+                centreSearch={centreSearch}
+                setCentreSearch={setCentreSearch}
+                centreVideos={centreVideos}
+                refreshCentres={() => setCentreVideos(randomItems(TEST_CENTRE_VIDEOS, 4))}
+              />
+            )}
           </>
         )}
       </div>
@@ -841,6 +935,7 @@ function Header({ page, setPage, saveState, profile, signOut }) {
     { id: "ask", label: "Ask Francis" },
     { id: "community", label: "Community" },
     { id: "resources", label: "Video Tips" },
+    { id: "centres", label: "Test Centres" },
   ];
 
   return (
@@ -965,11 +1060,42 @@ function Dashboard({ setPage, scoring, profile }) {
         </div>
       </section>
 
-      <section className="grid gap-3 md:grid-cols-4">
-        <ActionCard title="Progress Tracker" copy="Update your progress without scrolling through a giant depressing wall of stuff." button="Update skills" onClick={() => setPage("progress tracker")} tone="blue" />
-        <ActionCard title="Ask Francis" copy="If you need help ask me a question, I’ll answer." button="Ask a question" onClick={() => setPage("ask")} tone="yellow" />
-        <ActionCard title="Community" copy="See what other learners are posting, passing, overthinking and arguing about." button="Open community" onClick={() => setPage("community")} tone="white" />
-        <ActionCard title="Video Tips" copy="Quick access to my driving test tips and learn to drive videos, built right into the app." button="Watch videos" onClick={() => setPage("resources")} tone="blue" />
+      <section className="grid gap-3 md:grid-cols-5">
+        <ActionCard
+          title="Progress Tracker"
+          copy="Update your progress without scrolling through a giant depressing wall of stuff."
+          button="Update skills"
+          onClick={() => setPage("progress tracker")}
+          tone="blue"
+        />
+        <ActionCard
+          title="Ask Francis"
+          copy="If you need help ask me a question, I’ll answer."
+          button="Ask a question"
+          onClick={() => setPage("ask")}
+          tone="yellow"
+        />
+        <ActionCard
+          title="Community"
+          copy="See what other learners are posting, passing, overthinking and arguing about."
+          button="Open community"
+          onClick={() => setPage("community")}
+          tone="white"
+        />
+        <ActionCard
+          title="Video Tips"
+          copy="Quick access to my driving test tips and learn to drive videos, built right into the app."
+          button="Watch videos"
+          onClick={() => setPage("resources")}
+          tone="blue"
+        />
+        <ActionCard
+          title="Test Centres"
+          copy="Search to see whether I’ve already driven around your test centre and watch a random batch from the tour."
+          button="Search centres"
+          onClick={() => setPage("centres")}
+          tone="yellow"
+        />
       </section>
     </div>
   );
@@ -1328,6 +1454,112 @@ function PlaylistSection({ title, copy, playlistId, indices, onRefresh, buttonTe
         ))}
       </div>
     </section>
+  );
+}
+
+function TestCentresPage({ centreSearch, setCentreSearch, centreVideos, refreshCentres }) {
+  const searchResults = centreSearch.trim()
+    ? TEST_CENTRE_VIDEOS.filter((item) => item.centre.toLowerCase().includes(centreSearch.trim().toLowerCase()))
+    : centreVideos;
+
+  return (
+    <div className="space-y-6">
+      <section
+        className="rounded-[24px] p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-8"
+        style={{
+          background: `linear-gradient(135deg, ${BRAND.white} 0%, ${BRAND.blueLight} 55%, ${BRAND.yellowLight} 100%)`,
+          borderColor: BRAND.border,
+        }}
+      >
+        <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
+          Driving test centres
+        </p>
+        <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-5xl" style={{ color: BRAND.navy }}>
+          Search the UK test centre tour
+        </h2>
+        <p className="mt-4 max-w-3xl text-sm leading-7 sm:text-base" style={{ color: BRAND.slate }}>
+          Search to see if I’ve already done your driving test centre. If I have, you can jump straight into it. If not, hit refresh and have a nose around some of the others I’ve already toured.
+        </p>
+      </section>
+
+      <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex-1">
+            <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>
+              Search by driving test centre
+            </label>
+            <input
+              value={centreSearch}
+              onChange={(e) => setCentreSearch(e.target.value)}
+              placeholder="Try Portsmouth, Chingford, Uxbridge, Cardiff..."
+              className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none"
+              style={{ borderColor: BRAND.border }}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setCentreSearch("")}
+              className="w-full sm:w-auto rounded-2xl px-4 py-3 text-sm font-bold"
+              style={{ backgroundColor: BRAND.blueLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
+            >
+              Clear search
+            </button>
+            <button
+              onClick={refreshCentres}
+              className="w-full sm:w-auto rounded-2xl px-4 py-3 text-sm font-bold"
+              style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
+            >
+              Show random centres
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl p-3 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
+          <p className="text-sm" style={{ color: BRAND.slate }}>
+            {centreSearch.trim()
+              ? `${searchResults.length} result${searchResults.length === 1 ? "" : "s"} for "${centreSearch.trim()}".`
+              : "Showing 4 random test centre videos. Search above if you want a specific place."}
+          </p>
+        </div>
+      </section>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
+        {searchResults.map((item) => (
+          <div key={item.centre} className="overflow-hidden rounded-[24px] bg-white ring-1 shadow-[0_20px_60px_rgba(71,119,143,0.06)]" style={{ borderColor: BRAND.border }}>
+            <div className="aspect-video w-full">
+              <iframe
+                className="h-full w-full"
+                src={getYoutubeEmbedUrl(item.url)}
+                title={item.centre}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            </div>
+            <div className="p-4">
+              <h3 className="text-xl font-black" style={{ color: BRAND.navy }}>{item.centre}</h3>
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-block rounded-2xl px-4 py-3 text-sm font-bold"
+                style={{ backgroundColor: BRAND.yellowLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
+              >
+                Open on YouTube
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {searchResults.length === 0 && (
+        <div className="rounded-[24px] bg-white p-6 ring-1 sm:rounded-[32px]" style={{ borderColor: BRAND.border }}>
+          <p style={{ color: BRAND.slate }}>
+            Nothing matching that test centre yet. Once you add a new tour video later, this is where it’ll show up.
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
 
