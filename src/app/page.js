@@ -6,8 +6,8 @@ import {
   signInWithEmail,
   signOutUser,
   signUpWithEmail,
-} from "../lib/supabase/auth";
-import { createClient } from "../lib/supabase/client";
+} from "../lib/supabase/auth.js";
+import { createClient } from "../lib/supabase/client.js";
 
 const BRAND = {
   blue: "#7acef4",
@@ -519,7 +519,7 @@ function statusFromScore(score, zeroCount, completedCount, totalVisibleSkills) {
     title: "Flying now",
     message:
       "This is looking seriously strong. Keep it consistent and don’t let silly mistakes creep in.",
-  };
+    };
 }
 
 function calculateScoring(ratings, transmission) {
@@ -865,12 +865,19 @@ export default function App() {
 
       const supabase = createClient();
 
-      await supabase.from("profiles").upsert({
+      const { error: profileError } = await supabase.from("profiles").upsert({
         id: user.id,
         name: profile.name,
         email: profile.email,
         transmission: profile.transmission,
       });
+
+      if (profileError) {
+        console.error("PROFILE UPSERT ERROR:", profileError);
+        setAuthError("Account created, but profile save failed.");
+        setAuthLoading(false);
+        return;
+      }
 
       setProfile((prev) => ({
         ...prev,
@@ -904,60 +911,99 @@ export default function App() {
     setAuthError("");
   }
 
-  useEffect(() => {
-    async function saveProgress() {
-      if (!profile.isSignedIn) return;
+ useEffect(() => {
+  async function saveProgress() {
+    if (!profile.isSignedIn) return;
+
+    try {
+      const { data, error } = await getCurrentUser();
+      if (error || !data?.user) {
+        setSaveState("Save failed");
+        return;
+      }
+
+      const userId = data.user.id;
+      const supabase = createClient();
 
       setSaveState("Saving...");
 
-      try {
-        const { data, error } = await getCurrentUser();
-        if (error || !data?.user) {
-          setSaveState("Save failed");
-          return;
-        }
+// only save ratings that are not zero
+const ratingsToSave = Object.entries(ratings).filter(([, rating]) => rating > 0);
 
-        const userId = data.user.id;
-        const supabase = createClient();
+// profile is already created during sign up / sign in,
+// so we don't need to keep saving it on every progress update
 
-        const rows = Object.entries(ratings).map(([skill_id, rating]) => ({
-          user_id: userId,
-          skill_id,
-          rating,
-        }));
+// if no progress has been marked yet, we're done
+if (ratingsToSave.length === 0) {
+  setSaveState("Saved");
+  return;
+}
 
-        if (rows.length) {
-          const { error: upsertError } = await supabase
+      const { data: existingRows, error: existingError } = await supabase
+        .from("progress")
+        .select("id, skill_id, rating")
+        .eq("user_id", userId);
+
+      if (existingError) {
+        console.error("EXISTING ROWS ERROR:", existingError);
+        setSaveState("Save failed");
+        return;
+      }
+
+      const existingMap = new Map(
+        (existingRows || []).map((row) => [row.skill_id, row])
+      );
+
+      for (const [skill_id, rating] of ratingsToSave) {
+        const existing = existingMap.get(skill_id);
+
+        if (existing) {
+          if (existing.rating !== rating) {
+            const { error: updateError } = await supabase
+              .from("progress")
+              .update({
+                rating,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", existing.id)
+              .eq("user_id", userId);
+
+            if (updateError) {
+              console.error("UPDATE ERROR:", updateError);
+              setSaveState("Save failed");
+              return;
+            }
+          }
+        } else {
+          const { error: insertError } = await supabase
             .from("progress")
-            .upsert(rows, { onConflict: "user_id,skill_id" });
+            .insert({
+              user_id: userId,
+              skill_id,
+              rating,
+            });
 
-          if (upsertError) {
-            console.error(upsertError);
+          if (insertError) {
+            console.error("INSERT ERROR:", insertError);
             setSaveState("Save failed");
             return;
           }
         }
-
-        await supabase.from("profiles").upsert({
-          id: userId,
-          name: profile.name,
-          email: profile.email,
-          transmission: profile.transmission,
-        });
-
-        setSaveState("Saved");
-      } catch (error) {
-        console.error(error);
-        setSaveState("Save failed");
       }
+
+      setSaveState("Saved");
+    } catch (error) {
+      console.error("SAVE PROGRESS CATCH:", error);
+      setSaveState("Save failed");
     }
+  }
 
-    const timeout = setTimeout(() => {
-      saveProgress();
-    }, 400);
+  const timeout = setTimeout(() => {
+    saveProgress();
+  }, 600);
 
-    return () => clearTimeout(timeout);
-  }, [ratings, profile]);
+  return () => clearTimeout(timeout);
+}, [ratings, profile]);
 
   function updateRating(skillName, value) {
     setRatings((prev) => ({ ...prev, [slugify(skillName)]: value }));
@@ -1016,7 +1062,7 @@ export default function App() {
         .single();
 
       if (insertError) {
-        console.error(insertError);
+        console.error("TICKET INSERT ERROR:", insertError);
         return;
       }
 
