@@ -704,95 +704,87 @@ export default function App() {
   const [centreSearch, setCentreSearch] = useState("");
   const [centreVideos, setCentreVideos] = useState(() => randomItems(TEST_CENTRE_VIDEOS, 4));
 
-  useEffect(() => {
-    async function loadUser() {
-      try {
-        const { data, error } = await getCurrentUser();
-        if (error) {
-          console.error(error);
-          return;
-        }
-
-        const user = data?.user;
-        if (!user) return;
-
-        const supabase = createClient();
-
-        const { data: profileRow } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-
-        if (profileRow) {
-          setProfile({
-            name: profileRow.name || "",
-            email: profileRow.email || user.email || "",
-            transmission: profileRow.transmission || "manual",
-            isSignedIn: true,
-            authProvider: "supabase",
-          });
-        } else {
-          setProfile({
-            name: "",
-            email: user.email || "",
-            transmission: "manual",
-            isSignedIn: true,
-            authProvider: "supabase",
-          });
-        }
-
-        const { data: progressRows } = await supabase
-          .from("progress")
-          .select("skill_id, rating")
-          .eq("user_id", user.id);
-
-        if (progressRows?.length) {
-          const nextRatings = buildInitialRatings();
-          progressRows.forEach((row) => {
-            nextRatings[row.skill_id] = row.rating;
-          });
-          setRatings(nextRatings);
-        }
-
-        const { data: ticketRows } = await supabase
-          .from("ask_francis_tickets")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
-
-        if (ticketRows) {
-          const { data: repliesRows } = await supabase
-            .from("ask_francis_replies")
-            .select("*")
-            .order("created_at", { ascending: true });
-
-          setTickets(
-            ticketRows.map((ticket) => ({
-              id: ticket.id,
-              subject: ticket.subject,
-              message: ticket.message,
-              links: ticket.links || "",
-              status: ticket.status || "Awaiting reply",
-              createdAt: new Date(ticket.created_at).toLocaleDateString(),
-              replies:
-                repliesRows
-                  ?.filter((reply) => reply.ticket_id === ticket.id)
-                  .map((reply) => ({
-                    id: reply.id,
-                    message: reply.reply_text,
-                  })) || [],
-            }))
-          );
-        }
-
-        setPage("dashboard");
-      } catch (error) {
+  async function hydrateUserData() {
+    try {
+      const { data, error } = await getCurrentUser();
+      if (error) {
         console.error(error);
+        return;
       }
-    }
 
-    loadUser();
+      const user = data?.user;
+      if (!user) return;
+
+      const supabase = createClient();
+
+      const { data: profileRow } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      setProfile({
+        name: profileRow?.name || "",
+        email: profileRow?.email || user.email || "",
+        transmission: profileRow?.transmission || "manual",
+        isSignedIn: true,
+        authProvider: "supabase",
+      });
+
+      const { data: progressRows } = await supabase
+        .from("progress")
+        .select("skill_id, rating")
+        .eq("user_id", user.id);
+
+      const nextRatings = buildInitialRatings();
+      if (progressRows?.length) {
+        progressRows.forEach((row) => {
+          nextRatings[row.skill_id] = row.rating;
+        });
+      }
+      setRatings(nextRatings);
+
+      const { data: ticketRows } = await supabase
+        .from("ask_francis_tickets")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (ticketRows) {
+        const { data: repliesRows } = await supabase
+          .from("ask_francis_replies")
+          .select("*")
+          .order("created_at", { ascending: true });
+
+        setTickets(
+          ticketRows.map((ticket) => ({
+            id: ticket.id,
+            subject: ticket.subject,
+            message: ticket.message,
+            links: ticket.links || "",
+            status: ticket.status || "Awaiting reply",
+            createdAt: new Date(ticket.created_at).toLocaleDateString(),
+            replies:
+              repliesRows
+                ?.filter((r) => r.ticket_id === ticket.id)
+                .map((r) => ({
+                  id: r.id,
+                  message: r.reply_text,
+                })) || [],
+          }))
+        );
+      } else {
+        setTickets([]);
+      }
+
+      setPage("dashboard");
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  useEffect(() => {
+    hydrateUserData();
   }, []);
 
   const scoring = useMemo(
@@ -879,14 +871,8 @@ export default function App() {
         return;
       }
 
-      setProfile((prev) => ({
-        ...prev,
-        isSignedIn: true,
-        authProvider: "supabase",
-      }));
-
-      setPage("dashboard");
       setPassword("");
+      await hydrateUserData();
     } catch (error) {
       console.error(error);
       setAuthError("Something went wrong signing you in.");
@@ -911,99 +897,92 @@ export default function App() {
     setAuthError("");
   }
 
- useEffect(() => {
-  async function saveProgress() {
-    if (!profile.isSignedIn) return;
+  useEffect(() => {
+    async function saveProgress() {
+      if (!profile.isSignedIn) return;
 
-    try {
-      const { data, error } = await getCurrentUser();
-      if (error || !data?.user) {
-        setSaveState("Save failed");
-        return;
-      }
+      try {
+        const { data, error } = await getCurrentUser();
+        if (error || !data?.user) {
+          setSaveState("Save failed");
+          return;
+        }
 
-      const userId = data.user.id;
-      const supabase = createClient();
+        const userId = data.user.id;
+        const supabase = createClient();
 
-      setSaveState("Saving...");
+        setSaveState("Saving...");
 
-// only save ratings that are not zero
-const ratingsToSave = Object.entries(ratings).filter(([, rating]) => rating > 0);
+        const ratingsToSave = Object.entries(ratings).filter(([, rating]) => rating > 0);
 
-// profile is already created during sign up / sign in,
-// so we don't need to keep saving it on every progress update
+        if (ratingsToSave.length === 0) {
+          setSaveState("Saved");
+          return;
+        }
 
-// if no progress has been marked yet, we're done
-if (ratingsToSave.length === 0) {
-  setSaveState("Saved");
-  return;
-}
+        const { data: existingRows, error: existingError } = await supabase
+          .from("progress")
+          .select("id, skill_id, rating")
+          .eq("user_id", userId);
 
-      const { data: existingRows, error: existingError } = await supabase
-        .from("progress")
-        .select("id, skill_id, rating")
-        .eq("user_id", userId);
+        if (existingError) {
+          console.error("EXISTING ROWS ERROR:", existingError);
+          setSaveState("Save failed");
+          return;
+        }
 
-      if (existingError) {
-        console.error("EXISTING ROWS ERROR:", existingError);
-        setSaveState("Save failed");
-        return;
-      }
+        const existingMap = new Map((existingRows || []).map((row) => [row.skill_id, row]));
 
-      const existingMap = new Map(
-        (existingRows || []).map((row) => [row.skill_id, row])
-      );
+        for (const [skill_id, rating] of ratingsToSave) {
+          const existing = existingMap.get(skill_id);
 
-      for (const [skill_id, rating] of ratingsToSave) {
-        const existing = existingMap.get(skill_id);
+          if (existing) {
+            if (existing.rating !== rating) {
+              const { error: updateError } = await supabase
+                .from("progress")
+                .update({
+                  rating,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("id", existing.id)
+                .eq("user_id", userId);
 
-        if (existing) {
-          if (existing.rating !== rating) {
-            const { error: updateError } = await supabase
+              if (updateError) {
+                console.error("UPDATE ERROR:", updateError);
+                setSaveState("Save failed");
+                return;
+              }
+            }
+          } else {
+            const { error: insertError } = await supabase
               .from("progress")
-              .update({
+              .insert({
+                user_id: userId,
+                skill_id,
                 rating,
-                updated_at: new Date().toISOString(),
-              })
-              .eq("id", existing.id)
-              .eq("user_id", userId);
+              });
 
-            if (updateError) {
-              console.error("UPDATE ERROR:", updateError);
+            if (insertError) {
+              console.error("INSERT ERROR:", insertError);
               setSaveState("Save failed");
               return;
             }
           }
-        } else {
-          const { error: insertError } = await supabase
-            .from("progress")
-            .insert({
-              user_id: userId,
-              skill_id,
-              rating,
-            });
-
-          if (insertError) {
-            console.error("INSERT ERROR:", insertError);
-            setSaveState("Save failed");
-            return;
-          }
         }
+
+        setSaveState("Saved");
+      } catch (error) {
+        console.error("SAVE PROGRESS CATCH:", error);
+        setSaveState("Save failed");
       }
-
-      setSaveState("Saved");
-    } catch (error) {
-      console.error("SAVE PROGRESS CATCH:", error);
-      setSaveState("Save failed");
     }
-  }
 
-  const timeout = setTimeout(() => {
-    saveProgress();
-  }, 600);
+    const timeout = setTimeout(() => {
+      saveProgress();
+    }, 600);
 
-  return () => clearTimeout(timeout);
-}, [ratings, profile]);
+    return () => clearTimeout(timeout);
+  }, [ratings, profile]);
 
   function updateRating(skillName, value) {
     setRatings((prev) => ({ ...prev, [slugify(skillName)]: value }));
