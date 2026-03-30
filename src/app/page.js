@@ -634,7 +634,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen text-slate-900" style={{ background: `linear-gradient(180deg, ${BRAND.blueLight} 0%, ${BRAND.white} 40%, ${BRAND.yellowLight} 100%)` }}>
-      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-3 py-4 sm:px-5 lg:px-8">
         {!profile.isSignedIn ? (
           <LandingPage
             profile={profile}
@@ -699,8 +699,8 @@ export default function App() {
 
 function LandingPage({ profile, setProfile, authMode, setAuthMode, onSubmit, onProviderClick }) {
   return (
-    <div className="grid min-h-[88vh] items-center gap-8 lg:grid-cols-[1.05fr,0.95fr]">
-      <section className="rounded-[36px] p-8 shadow-[0_20px_70px_rgba(71,119,143,0.08)]" style={{ background: `linear-gradient(135deg, ${BRAND.white} 0%, ${BRAND.blueLight} 60%, ${BRAND.yellowLight} 100%)`, border: `1px solid ${BRAND.border}` }}>
+    <div className="grid min-h-[88vh] items-start gap-5 lg:items-center lg:gap-8 lg:grid-cols-[1.05fr,0.95fr]">
+      <section className="rounded-[22px] p-4 sm:rounded-[28px] sm:p-5 sm:rounded-[36px] sm:p-8 shadow-[0_20px_70px_rgba(71,119,143,0.08)]" style={{ background: `linear-gradient(135deg, ${BRAND.white} 0%, ${BRAND.blueLight} 60%, ${BRAND.yellowLight} 100%)`, border: `1px solid ${BRAND.border}` }}>
         <div className="inline-flex items-center gap-3 rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.28em]" style={{ backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}>
           <img src={LOGO_URL} alt="Driving School TV logo" className="h-7 w-7 rounded-full" />
           <span>Driving School TV</span>
@@ -719,7 +719,7 @@ function LandingPage({ profile, setProfile, authMode, setAuthMode, onSubmit, onP
       </section>
 
       <section className="rounded-[36px] bg-white p-8 shadow-[0_20px_70px_rgba(71,119,143,0.08)] ring-1" style={{ borderColor: BRAND.border }}>
-        <div className="mb-6 flex gap-2">
+        <div className="mb-5 grid grid-cols-2 gap-2 sm:flex">
           <button onClick={() => setAuthMode("signin")} className="rounded-2xl px-4 py-2 text-sm font-bold" style={authMode === "signin" ? { backgroundColor: BRAND.navy, color: BRAND.white } : { backgroundColor: BRAND.blueLight, color: BRAND.navy }}>
             Sign in
           </button>
@@ -746,14 +746,14 @@ function LandingPage({ profile, setProfile, authMode, setAuthMode, onSubmit, onP
           </div>
           <div>
             <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>Transmission</label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {[
                 { id: "manual", label: "Manual" },
                 { id: "automatic", label: "Automatic" },
               ].map((item) => {
                 const selected = profile.transmission === item.id;
                 return (
-                  <button type="button" key={item.id} onClick={() => setProfile((prev) => ({ ...prev, transmission: item.id }))} className="rounded-2xl px-4 py-3 text-sm font-bold" style={selected ? { backgroundColor: BRAND.navy, color: BRAND.white } : { backgroundColor: BRAND.blueLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}>
+                  <button type="button" key={item.id} onClick={() => setProfile((prev) => ({ ...prev, transmission: item.id }))} className="w-full sm:w-auto rounded-2xl px-4 py-3 text-sm font-bold" style={selected ? { backgroundColor: BRAND.navy, color: BRAND.white } : { backgroundColor: BRAND.blueLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}>
                     {item.label}
                   </button>
                 );
@@ -782,7 +782,7 @@ function LandingPage({ profile, setProfile, authMode, setAuthMode, onSubmit, onP
 }
 
 function FeaturePill({ text }) {
-  return <div className="rounded-2xl px-4 py-3 text-sm font-bold" style={{ backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}>{text}</div>;
+  return <div className="w-full sm:w-auto rounded-2xl px-4 py-3 text-sm font-bold" style={{ backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}>{text}</div>;
 }
 
 function Header({ page, setPage, saveState, profile, updateTransmission, signOut }) {
@@ -794,21 +794,21 @@ function Header({ page, setPage, saveState, profile, updateTransmission, signOut
   ];
 
   return (
-    <header className="mb-6 rounded-[28px] border bg-white/95 backdrop-blur shadow-[0_10px_40px_rgba(71,119,143,0.10)]" style={{ borderColor: BRAND.border }}>
-      <div className="flex flex-col gap-4 px-5 py-5 xl:flex-row xl:items-center xl:justify-between">
+    <header className="mb-4 rounded-[24px] border bg-white/95 backdrop-blur shadow-[0_10px_40px_rgba(71,119,143,0.10)] sm:mb-6 sm:rounded-[28px]" style={{ borderColor: BRAND.border }}>
+      <div className="flex flex-col gap-4 px-4 py-4 sm:px-5 sm:py-5 xl:flex-row xl:items-center xl:justify-between">
         <div>
           <div className="mb-2 inline-flex items-center gap-3 rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.25em]" style={{ backgroundColor: BRAND.blueLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}>
             <img src={LOGO_URL} alt="Driving School TV logo" className="h-8 w-8 rounded-full" />
             <span>Driving School TV</span>
           </div>
-          <h1 className="text-2xl font-black tracking-tight sm:text-3xl" style={{ color: BRAND.navy }}>Instructor In Your Pocket</h1>
+          <h1 className="text-xl font-black tracking-tight sm:text-3xl" style={{ color: BRAND.navy }}>Instructor In Your Pocket</h1>
           <p className="mt-1 text-sm sm:text-base" style={{ color: BRAND.slate }}>
             Hello {profile.name || "learner"}. Driving test progress tracker
           </p>
         </div>
 
         <div className="flex flex-col gap-3 xl:items-end">
-          <nav className="flex flex-wrap gap-2">
+          <nav className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             {navItems.map((item) => {
               const active = page === item.id;
               return (
@@ -818,7 +818,7 @@ function Header({ page, setPage, saveState, profile, updateTransmission, signOut
               );
             })}
           </nav>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center">
             <TransmissionToggle transmission={profile.transmission} updateTransmission={updateTransmission} compact />
             <div className="rounded-full px-3 py-1 text-xs font-semibold" style={{ backgroundColor: BRAND.blueLight, color: BRAND.slate }}>
               {saveState}
@@ -867,17 +867,17 @@ function InsightCard({ title, item, tone }) {
 function Dashboard({ setPage, scoring, profile }) {
   return (
     <div className="space-y-6">
-      <section className="grid gap-6 lg:grid-cols-[1.15fr,0.85fr]">
-        <div className="overflow-hidden rounded-[32px] p-6 ring-1 sm:p-8 shadow-[0_20px_60px_rgba(71,119,143,0.10)]" style={{ background: `linear-gradient(135deg, ${BRAND.white} 0%, ${BRAND.blueLight} 58%, ${BRAND.yellowLight} 100%)`, borderColor: BRAND.border }}>
+      <section className="grid gap-4 lg:gap-6 lg:grid-cols-[1.15fr,0.85fr]">
+        <div className="overflow-hidden rounded-[24px] p-4 ring-1 sm:rounded-[32px] sm:p-8 shadow-[0_20px_60px_rgba(71,119,143,0.10)]" style={{ background: `linear-gradient(135deg, ${BRAND.white} 0%, ${BRAND.blueLight} 58%, ${BRAND.yellowLight} 100%)`, borderColor: BRAND.border }}>
           <p className="mb-2 text-sm font-black uppercase tracking-[0.28em]" style={{ color: BRAND.navy }}>Learner profile</p>
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm font-bold" style={{ color: BRAND.slate }}>Hello {profile.name || "learner"}</p>
-              <h2 className="text-5xl font-black tracking-tight sm:text-7xl" style={{ color: BRAND.navy }}>{scoring.score}%</h2>
+              <h2 className="text-4xl font-black tracking-tight sm:text-7xl" style={{ color: BRAND.navy }}>{scoring.score}%</h2>
               <p className="mt-2 text-2xl font-black">{scoring.title}</p>
               <p className="mt-3 max-w-xl text-sm leading-6 sm:text-base" style={{ color: BRAND.slate }}>{scoring.message}</p>
             </div>
-            <div className="rounded-[28px] p-5 shadow-sm backdrop-blur ring-1" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
+            <div className="rounded-[22px] p-4 sm:rounded-[28px] sm:p-5 shadow-sm backdrop-blur ring-1" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
               <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.slate }}>Just so you know</p>
               <p className="mt-2 max-w-[220px] text-sm leading-6" style={{ color: BRAND.slate }}>
                 You’ve ticked off {scoring.completedCount} of {scoring.totalVisibleSkills} things so far. You’re warming up nicely — this is where it starts getting interesting.
@@ -892,7 +892,7 @@ function Dashboard({ setPage, scoring, profile }) {
           </div>
         </div>
 
-        <div className="rounded-[32px] bg-white p-6 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1" style={{ borderColor: BRAND.border }}>
+        <div className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>Pass insights</p>
           {!scoring.insightsUnlocked ? (
             <div className="mt-4 rounded-3xl p-5 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
@@ -951,16 +951,16 @@ function FilterChip({ label, active, onClick }) {
 function ProgressTrackerPage({ search, setSearch, selectedRatings, toggleRatingFilter, clearRatingFilters, ratings, updateRating, sections, expandedSections, toggleSection, scoring, transmission }) {
   return (
     <div className="space-y-6">
-      <section className="rounded-[32px] bg-white p-6 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1" style={{ borderColor: BRAND.border }}>
+      <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>Progress Tracker tracker</p>
+            <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>Progress Tracker</p>
             <h2 className="mt-1 text-3xl font-black tracking-tight">Build your score properly</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 sm:text-base" style={{ color: BRAND.slate }}>
               Filtered for <span className="font-bold" style={{ color: BRAND.navy }}>{transmission}</span>. Search for something specific or click the rating chips to instantly show everything you’ve marked that way.
             </p>
           </div>
-          <div className="rounded-[28px] p-5 text-white shadow-lg" style={{ backgroundColor: BRAND.navy }}>
+          <div className="rounded-[22px] p-4 sm:rounded-[28px] sm:p-5 text-white shadow-lg" style={{ backgroundColor: BRAND.navy }}>
             <p className="text-xs font-black uppercase tracking-[0.2em] opacity-80">Current score</p>
             <p className="mt-1 text-4xl font-black">{scoring.score}%</p>
             <p className="text-sm opacity-90">{scoring.title}</p>
@@ -984,7 +984,7 @@ function ProgressTrackerPage({ search, setSearch, selectedRatings, toggleRatingF
           const open = expandedSections[section.id];
           return (
             <section key={section.id} className="overflow-hidden rounded-[32px] bg-white shadow-[0_20px_60px_rgba(71,119,143,0.05)] ring-1" style={{ borderColor: BRAND.border }}>
-              <button onClick={() => toggleSection(section.id)} className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left">
+              <button onClick={() => toggleSection(section.id)} className="flex w-full flex-col items-start justify-between gap-4 px-4 py-4 text-left sm:flex-row sm:items-center sm:px-6 sm:py-5">
                 <div>
                   <h3 className="text-xl font-black">{section.title}</h3>
                   <p className="mt-1 max-w-3xl text-sm" style={{ color: BRAND.slate }}>{section.description}</p>
@@ -1009,12 +1009,12 @@ function ProgressTrackerPage({ search, setSearch, selectedRatings, toggleRatingF
                               <div key={skill.name} className="rounded-3xl bg-white p-4 ring-1" style={{ borderColor: BRAND.border }}>
                                 <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                                   <div>
-                                    <h5 className="text-base font-bold sm:text-lg">{skill.name}</h5>
+                                    <h5 className="text-sm font-bold sm:text-lg">{skill.name}</h5>
                                     <p className="mt-1 text-sm" style={{ color: BRAND.slate }}>
                                       Current rating: <span className="font-bold" style={{ color: BRAND.navy }}>{getRatingLabel(skill, selected)}</span>
                                     </p>
                                   </div>
-                                  <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 xl:grid-cols-5">
+                                  <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                                     {levels.map((level) => {
                                       const isSelected = selected === level.value;
                                       return (
@@ -1053,7 +1053,7 @@ function SectionMiniScore({ section, ratings, transmission }) {
   const avg = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
   const score = Math.round(Math.pow(avg / 5, 1.45) * 100);
   return (
-    <div className="min-w-[160px] rounded-2xl p-3 ring-1" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
+    <div className="w-full sm:min-w-[160px] rounded-2xl p-3 ring-1" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
       <div className="flex items-center justify-between text-sm"><span className="font-semibold" style={{ color: BRAND.slate }}>Section</span><span className="font-black" style={{ color: BRAND.navy }}>{score}%</span></div>
       <div className="mt-3 h-2 overflow-hidden rounded-full ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}><div className="h-full rounded-full" style={{ width: `${score}%`, backgroundColor: BRAND.navy }} /></div>
     </div>
@@ -1063,21 +1063,21 @@ function SectionMiniScore({ section, ratings, transmission }) {
 function AskFrancisPage({ profile, scoring, tickets, newTicket, setNewTicket, submitTicket }) {
   return (
     <div className="space-y-6">
-      <section className="rounded-[32px] p-6 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:p-8" style={{ background: `linear-gradient(135deg, ${BRAND.white} 0%, ${BRAND.blueLight} 55%, ${BRAND.yellowLight} 100%)`, borderColor: BRAND.border }}>
+      <section className="rounded-[24px] p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-8" style={{ background: `linear-gradient(135deg, ${BRAND.white} 0%, ${BRAND.blueLight} 55%, ${BRAND.yellowLight} 100%)`, borderColor: BRAND.border }}>
         <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>Ask Francis</p>
-        <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-5xl" style={{ color: BRAND.navy }}>You actually get access to me</h2>
+        <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-5xl" style={{ color: BRAND.navy }}>Need help\? Ask me\.</h2>
         <p className="mt-4 max-w-3xl text-sm leading-7 sm:text-base" style={{ color: BRAND.slate }}>
           If you need a hand, ask me. Faults, nerves, mock tests, roundabouts, your instructor, test day, whatever it is — send it over and I’ll get back to you. The more detail you give me, the more useful I can be.
         </p>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <HeroPill title="Direct access" copy="Ask me your own driving questions, not generic app fluff." />
+          <HeroPill title="Direct access" copy="Ask me the stuff you’d normally message me about." />
           <HeroPill title="Send links" copy="Feel free to send YouTube or social media links to illustrate your question." />
           <HeroPill title="Reply window" copy="Replies can take up to 24 hours, so don’t panic if it’s not instant." />
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr,1fr]">
-        <section className="rounded-[32px] bg-white p-6 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1" style={{ borderColor: BRAND.border }}>
+      <div className="grid gap-4 xl:gap-6 xl:grid-cols-[1fr,1fr]">
+        <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>Submit a question</p>
           <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
             Hello {profile.name || "learner"}. Pop your question below. If a video helps explain it, feel free to send a link from YouTube, TikTok, Instagram, Facebook or anywhere else.
@@ -1098,7 +1098,7 @@ function AskFrancisPage({ profile, scoring, tickets, newTicket, setNewTicket, su
               <textarea
                 value={newTicket.message}
                 onChange={(e) => setNewTicket((prev) => ({ ...prev, message: e.target.value }))}
-                rows={8}
+                rows={5}
                 placeholder="Explain what happened, what you’re worried about, and what you want help with."
                 className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400"
                 style={{ borderColor: BRAND.border }}
@@ -1121,14 +1121,14 @@ function AskFrancisPage({ profile, scoring, tickets, newTicket, setNewTicket, su
                 It can take up to 24 hours for a reply. Your question will appear below like a support ticket, and replies will sit underneath once answered.
               </p>
             </div>
-            <button className="rounded-2xl px-4 py-3 text-sm font-bold" style={{ backgroundColor: BRAND.navy, color: BRAND.white }}>
+            <button className="w-full sm:w-auto rounded-2xl px-4 py-3 text-sm font-bold" style={{ backgroundColor: BRAND.navy, color: BRAND.white }}>
               Submit question
             </button>
           </form>
         </section>
 
         <section className="space-y-6">
-          <div className="rounded-[32px] p-6 shadow-[0_20px_60px_rgba(71,119,143,0.06)] ring-1" style={{ background: `linear-gradient(135deg, ${BRAND.blueLight} 0%, ${BRAND.white} 100%)`, borderColor: BRAND.border }}>
+          <div className="rounded-[24px] p-4 shadow-[0_20px_60px_rgba(71,119,143,0.06)] ring-1 sm:rounded-[32px] sm:p-6" style={{ background: `linear-gradient(135deg, ${BRAND.blueLight} 0%, ${BRAND.white} 100%)`, borderColor: BRAND.border }}>
             <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.slate }}>Your current context</p>
             <div className="mt-4 rounded-[28px] bg-white p-5 ring-1" style={{ borderColor: BRAND.border }}>
               <p className="text-4xl font-black" style={{ color: BRAND.navy }}>{scoring.score}%</p>
@@ -1139,7 +1139,7 @@ function AskFrancisPage({ profile, scoring, tickets, newTicket, setNewTicket, su
             </div>
           </div>
 
-          <div className="rounded-[32px] bg-white p-6 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1" style={{ borderColor: BRAND.border }}>
+          <div className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>Your ticket thread</p>
@@ -1148,7 +1148,7 @@ function AskFrancisPage({ profile, scoring, tickets, newTicket, setNewTicket, su
             </div>
             <div className="mt-4 space-y-4">
               {tickets.map((ticket) => (
-                <div key={ticket.id} className="rounded-[28px] p-5 ring-1" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
+                <div key={ticket.id} className="rounded-[22px] p-4 sm:rounded-[28px] sm:p-5 ring-1" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <h3 className="text-lg font-black">{ticket.subject}</h3>
@@ -1200,15 +1200,15 @@ function HeroPill({ title, copy }) {
 
 function CommunityPage({ profile, posts, newPost, setNewPost, submitPost }) {
   return (
-    <div className="grid gap-6 xl:grid-cols-[0.95fr,1.05fr]">
-      <section className="rounded-[32px] bg-white p-6 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1" style={{ borderColor: BRAND.border }}>
+    <div className="grid gap-4 xl:gap-6 xl:grid-cols-[0.95fr,1.05fr]">
+      <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
         <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>Community</p>
         <h2 className="mt-1 text-3xl font-black tracking-tight">Learner forum</h2>
         <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
           Proper learner-driver reddit energy, just with fewer weird tangents and more actual driving chat.
         </p>
 
-        <form onSubmit={submitPost} className="mt-6 rounded-[28px] p-5 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
+        <form onSubmit={submitPost} className="mt-6 rounded-[22px] p-4 sm:rounded-[28px] sm:p-5 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
           <div className="mb-4">
             <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>Posting as</label>
             <input value={profile.name || "Learner"} disabled className="w-full rounded-2xl border bg-white px-4 py-3 text-sm" style={{ borderColor: BRAND.border, color: BRAND.slate }} />
@@ -1232,7 +1232,7 @@ function CommunityPage({ profile, posts, newPost, setNewPost, submitPost }) {
           </div>
           <div>
             <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>Message</label>
-            <textarea value={newPost.body} onChange={(e) => setNewPost((prev) => ({ ...prev, body: e.target.value }))} rows={6} placeholder="What’s happened? What are you stuck on? What are you overthinking?" className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400" style={{ borderColor: BRAND.border }} />
+            <textarea value={newPost.body} onChange={(e) => setNewPost((prev) => ({ ...prev, body: e.target.value }))} rows={5} placeholder="What’s happened? What are you stuck on? What are you overthinking?" className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400" style={{ borderColor: BRAND.border }} />
           </div>
           <button className="mt-4 rounded-2xl px-4 py-3 text-sm font-bold" style={{ backgroundColor: BRAND.navy, color: BRAND.white }}>
             Post to forum
@@ -1242,14 +1242,14 @@ function CommunityPage({ profile, posts, newPost, setNewPost, submitPost }) {
 
       <section className="space-y-4">
         {posts.map((post) => (
-          <article key={post.id} className="rounded-[32px] bg-white p-5 shadow-[0_20px_60px_rgba(71,119,143,0.06)] ring-1" style={{ borderColor: BRAND.border }}>
+          <article key={post.id} className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.06)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
             <div className="flex items-center justify-between gap-3">
               <span className="rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.2em]" style={{ backgroundColor: BRAND.yellowLight, color: BRAND.navy }}>{post.tag}</span>
               <span className="text-xs" style={{ color: BRAND.slate }}>by {post.author}</span>
             </div>
             <h3 className="mt-4 text-xl font-black">{post.subject}</h3>
             <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>{post.body}</p>
-            <div className="mt-5 flex gap-2 text-sm">
+            <div className="mt-5 flex flex-wrap gap-2 text-sm">
               <button className="rounded-2xl px-3 py-2 font-bold ring-1" style={{ backgroundColor: BRAND.white, color: BRAND.navy, borderColor: BRAND.border }}>Upvote</button>
               <button className="rounded-2xl px-3 py-2 font-bold ring-1" style={{ backgroundColor: BRAND.white, color: BRAND.navy, borderColor: BRAND.border }}>Reply</button>
               <button className="rounded-2xl px-3 py-2 font-bold ring-1" style={{ backgroundColor: BRAND.white, color: BRAND.navy, borderColor: BRAND.border }}>Save</button>
