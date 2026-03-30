@@ -1138,10 +1138,10 @@ function AskFrancisPage({ profile, scoring, tickets, newTicket, setNewTicket, su
             <img src={FRANCIS_PHOTO_URL} alt="Francis" className="h-full w-full object-cover" />
           </div>
         </div>
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <HeroPill title="Direct access" copy="Ask me a question you need a driving instructor to answer. (Yes I’ll reply, not ai)" />
-          <HeroPill title="Send links" copy="Feel free to send YouTube or social media links to illustrate your question." />
-          <HeroPill title="Reply window" copy="Replies can take up to 24 hours, so don’t panic if it’s not instant." />
+        <div className="mt-6 rounded-[22px] bg-white p-4 ring-1 sm:rounded-[28px] sm:p-5" style={{ borderColor: BRAND.border }}>
+          <p className="text-sm leading-7" style={{ color: BRAND.slate }}>
+            Ask me a question you need a driving instructor to answer. Yes, I’ll reply, not ai. Feel free to send YouTube or social media links if they help explain it, and give me up to 24 hours to get back to you.
+          </p>
         </div>
       </section>
 
@@ -1258,13 +1258,8 @@ function AskFrancisPage({ profile, scoring, tickets, newTicket, setNewTicket, su
   );
 }
 
-function HeroPill({ title, copy }) {
-  return (
-    <div className="rounded-[28px] bg-white p-4 ring-1" style={{ borderColor: BRAND.border }}>
-      <p className="text-sm font-black" style={{ color: BRAND.navy }}>{title}</p>
-      <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>{copy}</p>
-    </div>
-  );
+function HeroPill() {
+  return null;
 }
 
 function CommunityPage({ profile, posts, newPost, setNewPost, submitPost }) {
