@@ -889,7 +889,7 @@ function TransmissionToggle({ transmission, updateTransmission, compact = false,
   );
 }
 
-function InsightCard({ transmission, updateTransmission, compact = false }) {
+function InsightCardPrimary({ transmission, updateTransmission, compact = false }) {
   return (
     <div className="flex items-center gap-2 rounded-full px-2 py-2" style={{ backgroundColor: BRAND.blueLight, border: `1px solid ${BRAND.border}` }}>
       {[
