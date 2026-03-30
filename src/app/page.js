@@ -38,6 +38,7 @@ const PROFILE_KEY = "dstv-pocket-profile-v6";
 const TICKETS_KEY = "dstv-pocket-tickets-v1";
 
 const LOGO_URL = "https://yt3.ggpht.com/d2QaWKf8p8xGRm4YoIXoScEZw31UbDhyxRGo-nmkhoee34a2sddrJsrfbsySWyuU4QpfPWEUHQ=s88-c-k-c0x00ffffff-no-rj";
+const FRANCIS_PHOTO_URL = "https://static.wixstatic.com/media/18cc8c_0ec5f02424654bfd8d472c39e8629393~mv2.jpeg/v1/crop/x_0,y_0,w_3689,h_4000/fill/w_862,h_934,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/francis_JPEG.jpeg";
 
 const SYLLABUS = [
   {
@@ -833,33 +834,33 @@ function Header({ page, setPage, saveState, profile, updateTransmission, signOut
   return (
     <header className="mb-6 rounded-[28px] border bg-white/95 backdrop-blur shadow-[0_10px_40px_rgba(71,119,143,0.10)]" style={{ borderColor: BRAND.border }}>
       <div className="flex flex-col gap-4 px-5 py-5 xl:flex-row xl:items-center xl:justify-between">
-        <div>
-          <div className="mb-2 inline-flex items-center gap-3 rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.25em]" style={{ backgroundColor: BRAND.blueLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}>
-            <img src={LOGO_URL} alt="Driving School TV logo" className="h-8 w-8 rounded-full" />
-            <span>Driving School TV</span>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="mb-2 inline-flex items-center gap-3 rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.25em]" style={{ backgroundColor: BRAND.blueLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}>
+              <img src={LOGO_URL} alt="Driving School TV logo" className="h-8 w-8 rounded-full" />
+              <span>Driving School TV</span>
+            </div>
+            <h1 className="text-2xl font-black tracking-tight sm:text-3xl" style={{ color: BRAND.navy }}>Instructor In Your Pocket</h1>
+            <p className="mt-1 text-sm sm:text-base" style={{ color: BRAND.slate }}>
+              Hello {profile.name || "learner"}
+            </p>
           </div>
-          <h1 className="text-2xl font-black tracking-tight sm:text-3xl" style={{ color: BRAND.navy }}>Instructor In Your Pocket</h1>
-          <p className="mt-1 text-sm sm:text-base" style={{ color: BRAND.slate }}>
-            Hello {profile.name || "learner"}
-          </p>
+          <button className="rounded-full px-2.5 py-1 text-[11px] font-bold shrink-0" style={{ backgroundColor: BRAND.yellowLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }} onClick={signOut}>
+            Sign out
+          </button>
         </div>
 
         <div className="flex flex-col gap-3 xl:items-end">
-          <div className="flex w-full items-start justify-between gap-3 xl:justify-end">
-            <nav className="flex flex-wrap gap-2">
-              {navItems.map((item) => {
-                const active = page === item.id;
-                return (
-                  <button key={item.id} onClick={() => setPage(item.id)} className="rounded-2xl px-4 py-2 text-sm font-bold transition" style={active ? { backgroundColor: BRAND.navy, color: BRAND.white } : { backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}>
-                    {item.label}
-                  </button>
-                );
-              })}
-            </nav>
-            <button className="rounded-full px-2.5 py-1 text-[11px] font-bold shrink-0" style={{ backgroundColor: BRAND.yellowLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }} onClick={signOut}>
-              Sign out
-            </button>
-          </div>
+          <nav className="flex flex-wrap gap-2">
+            {navItems.map((item) => {
+              const active = page === item.id;
+              return (
+                <button key={item.id} onClick={() => setPage(item.id)} className="rounded-2xl px-4 py-2 text-sm font-bold transition" style={active ? { backgroundColor: BRAND.navy, color: BRAND.white } : { backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}>
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
           <div className="flex flex-wrap items-center gap-2 justify-end">
             <div className="rounded-full px-3 py-1 text-xs font-semibold" style={{ backgroundColor: BRAND.blueLight, color: BRAND.slate }}>
               {saveState}
