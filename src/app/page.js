@@ -439,11 +439,13 @@ function buildInitialRatings() {
 
 function initialProfile() {
   return {
+    userId: "",
     name: "",
     email: "",
     transmission: "manual",
     isSignedIn: false,
     authProvider: "supabase",
+    subscription_status: "free",
   };
 }
 
@@ -456,6 +458,7 @@ function scoreTone(score) {
 
 function statusFromScore(score, zeroCount, completedCount, totalVisibleSkills) {
   const ratio = totalVisibleSkills ? completedCount / totalVisibleSkills : 0;
+
   if (completedCount === 0) {
     return {
       title: "Let’s get going",
@@ -463,6 +466,7 @@ function statusFromScore(score, zeroCount, completedCount, totalVisibleSkills) {
         "You’re right at the start, which is actually the fun bit. Get a few things ticked off and this will start feeling properly useful.",
     };
   }
+
   if (ratio < 0.12) {
     return {
       title: "You’re warming up",
@@ -470,6 +474,7 @@ function statusFromScore(score, zeroCount, completedCount, totalVisibleSkills) {
         "A few bits are now in motion. Keep stacking the basics and this will start getting exciting quickly.",
     };
   }
+
   if (ratio < 0.25) {
     return {
       title: "Nice start",
@@ -477,6 +482,7 @@ function statusFromScore(score, zeroCount, completedCount, totalVisibleSkills) {
         "You’ve got the wheels turning now. A few more bits ticked off and this starts giving you a much clearer picture.",
     };
   }
+
   if (ratio < 0.4) {
     return {
       title: "Building momentum",
@@ -484,6 +490,7 @@ function statusFromScore(score, zeroCount, completedCount, totalVisibleSkills) {
         "This is starting to look like real progress now. Keep going and it’ll begin to feel much more joined up.",
     };
   }
+
   if (ratio < 0.6) {
     return {
       title: "Getting properly interesting",
@@ -491,6 +498,7 @@ function statusFromScore(score, zeroCount, completedCount, totalVisibleSkills) {
         "You’re well past the early wobble stage now. Keep filling the gaps and this becomes ridiculously useful.",
     };
   }
+
   if (ratio < 0.8) {
     return {
       title: "You’re getting there",
@@ -498,6 +506,7 @@ function statusFromScore(score, zeroCount, completedCount, totalVisibleSkills) {
         "There’s a lot to like here. Keep tidying the weaker bits and this starts looking very testable.",
     };
   }
+
   if (zeroCount > 0) {
     return {
       title: "Nearly there",
@@ -505,6 +514,7 @@ function statusFromScore(score, zeroCount, completedCount, totalVisibleSkills) {
         "Loads is already in place. Finish off the untouched bits and you’ll have a much stronger all-round picture.",
     };
   }
+
   return {
     title: "Flying now",
     message:
@@ -701,6 +711,10 @@ export default function App() {
   const [replyDrafts, setReplyDrafts] = useState({});
   const initialHydratedRef = useRef(false);
 
+  const hasSubscription =
+    profile.subscription_status === "active" ||
+    profile.subscription_status === "trialing";
+
   async function loadProfileRow(supabase, user) {
     const { data: byId } = await supabase
       .from("profiles")
@@ -723,8 +737,63 @@ export default function App() {
     return null;
   }
 
+  async function startCheckout() {
+    try {
+      if (!profile.userId) return;
+
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId: profile.userId }),
+      });
+
+      const data = await res.json();
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Something went wrong starting checkout.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Checkout failed.");
+    }
+  }
+
+  async function openBilling() {
+    try {
+      if (!profile.userId) return;
+
+      const res = await fetch("/api/stripe/portal", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId: profile.userId }),
+      });
+
+      const data = await res.json();
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Unable to open billing.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Billing failed.");
+    }
+  }
+
   async function loadCommunityPosts() {
     try {
+      if (!hasSubscription) {
+        setCommunityPosts([]);
+        return;
+      }
+
       const { data, error: authErr } = await getCurrentUser();
       if (authErr || !data?.user) {
         setCommunityPosts([]);
@@ -804,11 +873,13 @@ export default function App() {
       const profileRow = await loadProfileRow(supabase, user);
 
       setProfile({
+        userId: user.id,
         name: profileRow?.name || "",
         email: profileRow?.email || user.email || "",
         transmission: profileRow?.transmission || "manual",
         isSignedIn: true,
         authProvider: "supabase",
+        subscription_status: profileRow?.subscription_status || "free",
       });
 
       const { data: progressRows, error: progressError } = await supabase
@@ -824,34 +895,38 @@ export default function App() {
         setRatings(nextRatings);
       }
 
-      const { data: ticketRows, error: ticketError } = await supabase
-        .from("ask_francis_tickets")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (!ticketError && ticketRows) {
-        const { data: repliesRows } = await supabase
-          .from("ask_francis_replies")
+      if (profileRow?.subscription_status === "active" || profileRow?.subscription_status === "trialing") {
+        const { data: ticketRows, error: ticketError } = await supabase
+          .from("ask_francis_tickets")
           .select("*")
-          .order("created_at", { ascending: true });
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
 
-        setTickets(
-          ticketRows.map((ticket) => ({
-            id: ticket.id,
-            subject: ticket.subject,
-            message: ticket.message,
-            links: ticket.links || "",
-            status: ticket.status || "Awaiting reply",
-            createdAt: new Date(ticket.created_at).toLocaleDateString(),
-            replies: (repliesRows || [])
-              .filter((reply) => reply.ticket_id === ticket.id)
-              .map((reply) => ({
-                id: reply.id,
-                message: reply.reply_text,
-              })),
-          }))
-        );
+        if (!ticketError && ticketRows) {
+          const { data: repliesRows } = await supabase
+            .from("ask_francis_replies")
+            .select("*")
+            .order("created_at", { ascending: true });
+
+          setTickets(
+            ticketRows.map((ticket) => ({
+              id: ticket.id,
+              subject: ticket.subject,
+              message: ticket.message,
+              links: ticket.links || "",
+              status: ticket.status || "Awaiting reply",
+              createdAt: new Date(ticket.created_at).toLocaleDateString(),
+              replies: (repliesRows || [])
+                .filter((reply) => reply.ticket_id === ticket.id)
+                .map((reply) => ({
+                  id: reply.id,
+                  message: reply.reply_text,
+                })),
+            }))
+          );
+        } else {
+          setTickets([]);
+        }
       } else {
         setTickets([]);
       }
@@ -871,7 +946,7 @@ export default function App() {
     if (profile.isSignedIn && page === "community") {
       loadCommunityPosts();
     }
-  }, [profile.isSignedIn, page]);
+  }, [profile.isSignedIn, page, hasSubscription]);
 
   const scoring = useMemo(
     () => calculateScoring(ratings, profile.transmission || "manual"),
@@ -955,6 +1030,7 @@ export default function App() {
           name: profile.name,
           email: profile.email,
           transmission: profile.transmission,
+          subscription_status: "free",
         });
 
         if (profileError) {
@@ -1000,7 +1076,7 @@ export default function App() {
 
   useEffect(() => {
     async function saveProgress() {
-      if (!profile.isSignedIn || !initialHydratedRef.current) return;
+      if (!profile.isSignedIn || !initialHydratedRef.current || !hasSubscription) return;
 
       try {
         const { data, error } = await getCurrentUser();
@@ -1081,9 +1157,10 @@ export default function App() {
     }, 600);
 
     return () => clearTimeout(timeout);
-  }, [ratings, profile.isSignedIn]);
+  }, [ratings, profile.isSignedIn, hasSubscription]);
 
   function updateRating(skillName, value) {
+    if (!hasSubscription) return;
     setRatings((prev) => ({ ...prev, [slugify(skillName)]: value }));
   }
 
@@ -1092,17 +1169,23 @@ export default function App() {
   }
 
   function toggleRatingFilter(value) {
+    if (!hasSubscription) return;
     setSelectedRatings((prev) =>
       prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
     );
   }
 
   function clearRatingFilters() {
+    if (!hasSubscription) return;
     setSelectedRatings([]);
   }
 
   async function submitPost(e) {
     e.preventDefault();
+    if (!hasSubscription) {
+      alert("You need a subscription to use community.");
+      return;
+    }
     if (!newPost.subject.trim() || !newPost.body.trim()) return;
 
     try {
@@ -1153,6 +1236,11 @@ export default function App() {
   }
 
   async function toggleLike(postId) {
+    if (!hasSubscription) {
+      alert("You need a subscription to use community.");
+      return;
+    }
+
     try {
       const { data, error } = await getCurrentUser();
       if (error || !data?.user) return;
@@ -1214,6 +1302,11 @@ export default function App() {
   }
 
   async function submitReply(postId) {
+    if (!hasSubscription) {
+      alert("You need a subscription to use community.");
+      return;
+    }
+
     const body = (replyDrafts[postId] || "").trim();
     if (!body) return;
 
@@ -1266,6 +1359,10 @@ export default function App() {
 
   async function submitTicket(e) {
     e.preventDefault();
+    if (!hasSubscription) {
+      alert("You need a subscription to Ask Francis.");
+      return;
+    }
     if (!newTicket.subject.trim() || !newTicket.message.trim()) return;
 
     try {
@@ -1338,9 +1435,18 @@ export default function App() {
               saveState={saveState}
               profile={profile}
               signOut={signOut}
+              hasSubscription={hasSubscription}
             />
 
-            {page === "dashboard" && <Dashboard scoring={scoring} profile={profile} />}
+            {page === "dashboard" && (
+              <Dashboard
+                scoring={scoring}
+                profile={profile}
+                hasSubscription={hasSubscription}
+                startCheckout={startCheckout}
+                openBilling={openBilling}
+              />
+            )}
 
             {page === "progress tracker" && (
               <ProgressTrackerPage
@@ -1356,6 +1462,8 @@ export default function App() {
                 expandedSections={expandedSections}
                 toggleSection={toggleSection}
                 transmission={profile.transmission}
+                hasSubscription={hasSubscription}
+                startCheckout={startCheckout}
               />
             )}
 
@@ -1365,6 +1473,8 @@ export default function App() {
                 newTicket={newTicket}
                 setNewTicket={setNewTicket}
                 submitTicket={submitTicket}
+                hasSubscription={hasSubscription}
+                startCheckout={startCheckout}
               />
             )}
 
@@ -1380,6 +1490,8 @@ export default function App() {
                 setReplyDrafts={setReplyDrafts}
                 submitReply={submitReply}
                 toggleLike={toggleLike}
+                hasSubscription={hasSubscription}
+                startCheckout={startCheckout}
               />
             )}
 
@@ -1403,6 +1515,35 @@ export default function App() {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+function PaywallCard({ title, copy, buttonText = "Unlock full access", onClick }) {
+  return (
+    <div
+      className="rounded-[24px] p-5 ring-1 sm:p-6"
+      style={{
+        background: `linear-gradient(135deg, ${BRAND.white} 0%, ${BRAND.blueLight} 75%, ${BRAND.yellowLight} 100%)`,
+        borderColor: BRAND.border,
+      }}
+    >
+      <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
+        Subscriber feature
+      </p>
+      <h3 className="mt-2 text-2xl font-black" style={{ color: BRAND.navy }}>
+        {title}
+      </h3>
+      <p className="mt-3 max-w-2xl text-sm leading-6" style={{ color: BRAND.slate }}>
+        {copy}
+      </p>
+      <button
+        onClick={onClick}
+        className="mt-4 rounded-2xl px-4 py-3 text-sm font-bold"
+        style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
+      >
+        {buttonText}
+      </button>
     </div>
   );
 }
@@ -1615,7 +1756,7 @@ function FeaturePill({ text }) {
   );
 }
 
-function Header({ page, setPage, saveState, profile, signOut }) {
+function Header({ page, setPage, saveState, profile, signOut, hasSubscription }) {
   const navItems = [
     { id: "dashboard", label: "Dashboard" },
     { id: "progress tracker", label: "Progress Tracker" },
@@ -1697,6 +1838,15 @@ function Header({ page, setPage, saveState, profile, signOut }) {
             >
               {saveState}
             </div>
+            <div
+              className="rounded-full px-3 py-1 text-xs font-semibold"
+              style={{
+                backgroundColor: hasSubscription ? BRAND.greenLight : BRAND.yellowLight,
+                color: hasSubscription ? BRAND.green : BRAND.navy,
+              }}
+            >
+              {hasSubscription ? "Subscriber" : "Free account"}
+            </div>
           </div>
         </div>
       </div>
@@ -1750,7 +1900,7 @@ function InsightCard({ title, item, tone }) {
   );
 }
 
-function Dashboard({ scoring, profile }) {
+function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilling }) {
   return (
     <div className="space-y-6">
       <section className="grid gap-4 lg:gap-6 lg:grid-cols-[1.15fr,0.85fr]">
@@ -1829,17 +1979,47 @@ function Dashboard({ scoring, profile }) {
               ))}
             </div>
           )}
+
+          <div className="mt-5">
+            {!hasSubscription ? (
+              <PaywallCard
+                title="Unlock the full app"
+                copy="Upgrade to use Progress Tracker properly, ask Francis questions directly, and unlock the community."
+                onClick={startCheckout}
+              />
+            ) : (
+              <div
+                className="rounded-3xl p-4 ring-1"
+                style={{ backgroundColor: BRAND.greenLight, borderColor: BRAND.border }}
+              >
+                <p className="text-sm font-black uppercase tracking-[0.18em]" style={{ color: BRAND.green }}>
+                  Subscription active
+                </p>
+                <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
+                  You’ve got full access. If you need to update payment details or manage your subscription, use the button below.
+                </p>
+                <button
+                  onClick={openBilling}
+                  className="mt-4 rounded-2xl px-4 py-3 text-sm font-bold"
+                  style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
+                >
+                  Manage subscription
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </section>
     </div>
   );
 }
 
-function FilterChip({ label, active, onClick }) {
+function FilterChip({ label, active, onClick, disabled = false }) {
   return (
     <button
       onClick={onClick}
-      className="rounded-2xl px-3 py-2 text-center text-xs font-black ring-1 transition"
+      disabled={disabled}
+      className="rounded-2xl px-3 py-2 text-center text-xs font-black ring-1 transition disabled:opacity-50"
       style={active ? { backgroundColor: BRAND.navy, color: BRAND.white, borderColor: BRAND.navy } : { backgroundColor: BRAND.blueLight, color: BRAND.navy, borderColor: BRAND.border }}
     >
       {label}
@@ -1860,9 +2040,19 @@ function ProgressTrackerPage({
   toggleSection,
   scoring,
   transmission,
+  hasSubscription,
+  startCheckout,
 }) {
   return (
     <div className="space-y-6">
+      {!hasSubscription && (
+        <PaywallCard
+          title="Progress Tracker is part of the paid app"
+          copy="You can browse the tracker and see how it works, but saving ratings and building your score properly needs a subscription."
+          onClick={startCheckout}
+        />
+      )}
+
       <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -1885,9 +2075,10 @@ function ProgressTrackerPage({
         <div className="mt-5 grid gap-3 lg:mt-6 lg:grid-cols-[1fr,auto]">
           <input
             value={search}
+            disabled={!hasSubscription}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search skills or sections"
-            className="rounded-2xl border px-4 py-3 text-sm outline-none placeholder:text-slate-400"
+            placeholder={hasSubscription ? "Search skills or sections" : "Upgrade to use search"}
+            className="rounded-2xl border px-4 py-3 text-sm outline-none placeholder:text-slate-400 disabled:opacity-60"
             style={{ borderColor: BRAND.border, backgroundColor: BRAND.white }}
           />
           <div className="flex flex-wrap gap-2">
@@ -1897,11 +2088,13 @@ function ProgressTrackerPage({
                 label={level.short}
                 active={selectedRatings.includes(level.value)}
                 onClick={() => toggleRatingFilter(level.value)}
+                disabled={!hasSubscription}
               />
             ))}
             <button
               onClick={clearRatingFilters}
-              className="rounded-2xl px-3 py-2 text-xs font-black ring-1"
+              disabled={!hasSubscription}
+              className="rounded-2xl px-3 py-2 text-xs font-black ring-1 disabled:opacity-50"
               style={{ backgroundColor: BRAND.white, color: BRAND.navy, borderColor: BRAND.border }}
             >
               Clear
@@ -1965,7 +2158,8 @@ function ProgressTrackerPage({
                                         <button
                                           key={level.value}
                                           onClick={() => updateRating(skill.name, level.value)}
-                                          className="rounded-2xl px-3 py-3 text-left text-xs font-bold transition"
+                                          disabled={!hasSubscription}
+                                          className="rounded-2xl px-3 py-3 text-left text-xs font-bold transition disabled:opacity-55"
                                           style={
                                             isSelected
                                               ? { backgroundColor: BRAND.navy, color: BRAND.white }
@@ -2020,7 +2214,7 @@ function SectionMiniScore({ section, ratings, transmission }) {
   );
 }
 
-function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket }) {
+function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSubscription, startCheckout }) {
   return (
     <div className="space-y-6">
       <section
@@ -2047,6 +2241,14 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket }) {
         </div>
       </section>
 
+      {!hasSubscription && (
+        <PaywallCard
+          title="Ask Francis is for subscribers"
+          copy="You can see what this section does, but sending questions and getting direct replies is part of the paid app."
+          onClick={startCheckout}
+        />
+      )}
+
       <div className="grid gap-4 xl:gap-6 xl:grid-cols-[1fr,1fr]">
         <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
@@ -2058,9 +2260,10 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket }) {
               <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>Question subject</label>
               <input
                 value={newTicket.subject}
+                disabled={!hasSubscription}
                 onChange={(e) => setNewTicket((prev) => ({ ...prev, subject: e.target.value }))}
-                placeholder="Example: Do I lose marks for hesitation at roundabouts?"
-                className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none"
+                placeholder={hasSubscription ? "Example: Do I lose marks for hesitation at roundabouts?" : "Upgrade to ask a question"}
+                className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none disabled:opacity-60"
                 style={{ borderColor: BRAND.border }}
               />
             </div>
@@ -2069,10 +2272,11 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket }) {
               <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>Your question</label>
               <textarea
                 value={newTicket.message}
+                disabled={!hasSubscription}
                 onChange={(e) => setNewTicket((prev) => ({ ...prev, message: e.target.value }))}
                 rows={6}
-                placeholder="Explain what happened, what you’re worried about, and what you want help with."
-                className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400"
+                placeholder={hasSubscription ? "Explain what happened, what you’re worried about, and what you want help with." : "Upgrade to use Ask Francis"}
+                className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 disabled:opacity-60"
                 style={{ borderColor: BRAND.border }}
               />
             </div>
@@ -2081,10 +2285,11 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket }) {
               <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>Helpful links (optional)</label>
               <textarea
                 value={newTicket.links}
+                disabled={!hasSubscription}
                 onChange={(e) => setNewTicket((prev) => ({ ...prev, links: e.target.value }))}
                 rows={3}
-                placeholder="Paste YouTube or social media links here if they help illustrate your question."
-                className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400"
+                placeholder={hasSubscription ? "Paste YouTube or social media links here if they help illustrate your question." : "Upgrade to send links"}
+                className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 disabled:opacity-60"
                 style={{ borderColor: BRAND.border }}
               />
             </div>
@@ -2096,7 +2301,11 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket }) {
               </p>
             </div>
 
-            <button className="w-full sm:w-auto rounded-2xl px-4 py-3 text-sm font-bold" style={{ backgroundColor: BRAND.navy, color: BRAND.white }}>
+            <button
+              disabled={!hasSubscription}
+              className="w-full sm:w-auto rounded-2xl px-4 py-3 text-sm font-bold disabled:opacity-60"
+              style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
+            >
               Submit question
             </button>
           </form>
@@ -2115,65 +2324,73 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket }) {
               </div>
             </div>
 
-            <div className="mt-4 space-y-4">
-              {tickets.map((ticket) => (
-                <div key={ticket.id} className="rounded-[22px] p-4 ring-1 sm:rounded-[28px] sm:p-5" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h3 className="text-lg font-black">{ticket.subject}</h3>
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: BRAND.slate }}>
-                        {ticket.createdAt}
-                      </p>
-                    </div>
-
-                    <span
-                      className="rounded-full px-3 py-1 text-xs font-black"
-                      style={{
-                        backgroundColor: ticket.replies.length ? BRAND.greenLight : BRAND.yellowLight,
-                        color: ticket.replies.length ? BRAND.green : BRAND.navy,
-                        border: `1px solid ${BRAND.border}`,
-                      }}
-                    >
-                      {ticket.replies.length ? "Answered" : ticket.status}
-                    </span>
-                  </div>
-
-                  <p className="mt-3 text-sm leading-6" style={{ color: BRAND.slate }}>{ticket.message}</p>
-
-                  {ticket.links && (
-                    <div className="mt-3 rounded-2xl p-3 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
-                      <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.navy }}>Links</p>
-                      <p className="mt-1 text-sm break-words" style={{ color: BRAND.slate }}>{ticket.links}</p>
-                    </div>
-                  )}
-
-                  <div className="mt-4 space-y-3">
-                    {ticket.replies.length === 0 ? (
-                      <div className="rounded-2xl p-3 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
-                        <p className="text-sm" style={{ color: BRAND.slate }}>
-                          No reply yet. Once answered, the response will appear directly underneath this question.
+            {!hasSubscription ? (
+              <div className="mt-4 rounded-2xl p-4 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
+                <p className="text-sm" style={{ color: BRAND.slate }}>
+                  This unlocks when you subscribe. You’ll be able to send questions and see replies here.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-4 space-y-4">
+                {tickets.map((ticket) => (
+                  <div key={ticket.id} className="rounded-[22px] p-4 ring-1 sm:rounded-[28px] sm:p-5" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-lg font-black">{ticket.subject}</h3>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: BRAND.slate }}>
+                          {ticket.createdAt}
                         </p>
                       </div>
-                    ) : (
-                      ticket.replies.map((reply) => (
-                        <div key={reply.id} className="rounded-2xl p-3 ring-1" style={{ backgroundColor: BRAND.greenLight, borderColor: BRAND.border }}>
-                          <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.green }}>
-                            Francis replied
-                          </p>
-                          <p className="mt-1 text-sm" style={{ color: BRAND.slate }}>{reply.message}</p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              ))}
 
-              {tickets.length === 0 && (
-                <div className="rounded-2xl p-4 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
-                  <p className="text-sm" style={{ color: BRAND.slate }}>No questions yet. Once you submit one, it’ll appear here.</p>
-                </div>
-              )}
-            </div>
+                      <span
+                        className="rounded-full px-3 py-1 text-xs font-black"
+                        style={{
+                          backgroundColor: ticket.replies.length ? BRAND.greenLight : BRAND.yellowLight,
+                          color: ticket.replies.length ? BRAND.green : BRAND.navy,
+                          border: `1px solid ${BRAND.border}`,
+                        }}
+                      >
+                        {ticket.replies.length ? "Answered" : ticket.status}
+                      </span>
+                    </div>
+
+                    <p className="mt-3 text-sm leading-6" style={{ color: BRAND.slate }}>{ticket.message}</p>
+
+                    {ticket.links && (
+                      <div className="mt-3 rounded-2xl p-3 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
+                        <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.navy }}>Links</p>
+                        <p className="mt-1 text-sm break-words" style={{ color: BRAND.slate }}>{ticket.links}</p>
+                      </div>
+                    )}
+
+                    <div className="mt-4 space-y-3">
+                      {ticket.replies.length === 0 ? (
+                        <div className="rounded-2xl p-3 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
+                          <p className="text-sm" style={{ color: BRAND.slate }}>
+                            No reply yet. Once answered, the response will appear directly underneath this question.
+                          </p>
+                        </div>
+                      ) : (
+                        ticket.replies.map((reply) => (
+                          <div key={reply.id} className="rounded-2xl p-3 ring-1" style={{ backgroundColor: BRAND.greenLight, borderColor: BRAND.border }}>
+                            <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.green }}>
+                              Francis replied
+                            </p>
+                            <p className="mt-1 text-sm" style={{ color: BRAND.slate }}>{reply.message}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {tickets.length === 0 && (
+                  <div className="rounded-2xl p-4 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
+                    <p className="text-sm" style={{ color: BRAND.slate }}>No questions yet. Once you submit one, it’ll appear here.</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </section>
       </div>
@@ -2377,6 +2594,8 @@ function CommunityPage({
   setReplyDrafts,
   submitReply,
   toggleLike,
+  hasSubscription,
+  startCheckout,
 }) {
   return (
     <div className="grid gap-4 xl:gap-6 xl:grid-cols-[0.95fr,1.05fr]">
@@ -2388,6 +2607,16 @@ function CommunityPage({
         <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
           Post a comment, ask a question, shout about your success, vent about your frustrations.
         </p>
+
+        {!hasSubscription && (
+          <div className="mt-5">
+            <PaywallCard
+              title="Community is for subscribers"
+              copy="You can see that the community exists, but posts and interaction unlock with a subscription."
+              onClick={startCheckout}
+            />
+          </div>
+        )}
 
         <form onSubmit={submitPost} className="mt-5 rounded-[22px] p-4 ring-1 sm:mt-6 sm:rounded-[28px] sm:p-5" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
           <div className="mb-4">
@@ -2404,9 +2633,10 @@ function CommunityPage({
             <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>Post subject</label>
             <input
               value={newPost.subject}
+              disabled={!hasSubscription}
               onChange={(e) => setNewPost((prev) => ({ ...prev, subject: e.target.value }))}
-              placeholder="Would this be a fault? / Passed today / Test next week etc"
-              className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none"
+              placeholder={hasSubscription ? "Would this be a fault? / Passed today / Test next week etc" : "Upgrade to post"}
+              className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none disabled:opacity-60"
               style={{ borderColor: BRAND.border }}
             />
           </div>
@@ -2415,8 +2645,9 @@ function CommunityPage({
             <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>Topic</label>
             <select
               value={newPost.tag}
+              disabled={!hasSubscription}
               onChange={(e) => setNewPost((prev) => ({ ...prev, tag: e.target.value }))}
-              className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none"
+              className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none disabled:opacity-60"
               style={{ borderColor: BRAND.border }}
             >
               <option>General</option>
@@ -2434,22 +2665,33 @@ function CommunityPage({
             <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>Message</label>
             <textarea
               value={newPost.body}
+              disabled={!hasSubscription}
               onChange={(e) => setNewPost((prev) => ({ ...prev, body: e.target.value }))}
               rows={5}
-              placeholder="What’s happened? What are you stuck on? What are you overthinking?"
-              className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400"
+              placeholder={hasSubscription ? "What’s happened? What are you stuck on? What are you overthinking?" : "Upgrade to use community"}
+              className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 disabled:opacity-60"
               style={{ borderColor: BRAND.border }}
             />
           </div>
 
-          <button className="w-full sm:w-auto mt-4 rounded-2xl px-4 py-3 text-sm font-bold" style={{ backgroundColor: BRAND.navy, color: BRAND.white }}>
+          <button
+            disabled={!hasSubscription}
+            className="w-full sm:w-auto mt-4 rounded-2xl px-4 py-3 text-sm font-bold disabled:opacity-60"
+            style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
+          >
             Post to forum
           </button>
         </form>
       </section>
 
       <section className="space-y-4">
-        {loading ? (
+        {!hasSubscription ? (
+          <div className="rounded-[24px] bg-white p-6 ring-1 sm:rounded-[32px]" style={{ borderColor: BRAND.border }}>
+            <p style={{ color: BRAND.slate }}>
+              Community posts are hidden on the free account. Upgrade to see discussions, replies and likes.
+            </p>
+          </div>
+        ) : loading ? (
           <div className="rounded-[24px] bg-white p-6 ring-1 sm:rounded-[32px]" style={{ borderColor: BRAND.border }}>
             <p style={{ color: BRAND.slate }}>Loading posts...</p>
           </div>

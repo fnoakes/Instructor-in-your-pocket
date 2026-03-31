@@ -19,6 +19,10 @@ const BRAND = {
   white: "#ffffff",
 };
 
+function isPaidStatus(status) {
+  return status === "active" || status === "trialing";
+}
+
 export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -37,6 +41,7 @@ export default function AdminPage() {
   const [savingReplyId, setSavingReplyId] = useState(null);
   const [hideBusyId, setHideBusyId] = useState(null);
   const [userAdminBusyId, setUserAdminBusyId] = useState(null);
+  const [userPaidBusyId, setUserPaidBusyId] = useState(null);
 
   const [openSections, setOpenSections] = useState({
     inbox: false,
@@ -228,6 +233,41 @@ export default function AdminPage() {
     }
   }
 
+  async function toggleUserPaid(userRow) {
+    try {
+      setUserPaidBusyId(userRow.id);
+      const supabase = createClient();
+
+      const nextPaid = !isPaidStatus(userRow.subscription_status);
+
+      const payload = nextPaid
+        ? {
+            subscription_status: "active",
+            current_period_end: null,
+          }
+        : {
+            subscription_status: "free",
+            current_period_end: null,
+          };
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(payload)
+        .eq("id", userRow.id);
+
+      if (error) {
+        console.error("ADMIN USER PAID TOGGLE ERROR:", error);
+        return;
+      }
+
+      await loadAdminDashboard();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setUserPaidBusyId(null);
+    }
+  }
+
   const activeTickets = useMemo(() => {
     const q = ticketSearch.trim().toLowerCase();
     return tickets.filter((ticket) => {
@@ -282,7 +322,8 @@ export default function AdminPage() {
       return (
         (user.name || "").toLowerCase().includes(q) ||
         (user.email || "").toLowerCase().includes(q) ||
-        (user.transmission || "").toLowerCase().includes(q)
+        (user.transmission || "").toLowerCase().includes(q) ||
+        (user.subscription_status || "").toLowerCase().includes(q)
       );
     });
 
@@ -365,7 +406,7 @@ export default function AdminPage() {
                 Instructor In Your Pocket admin
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6" style={{ color: BRAND.slate }}>
-                Reply to Ask Francis tickets, auto-archive answered support messages, moderate community posts, and search your user base properly.
+                Reply to Ask Francis tickets, archive handled support messages, moderate community posts, search users, and manually control paid access.
               </p>
             </div>
 
@@ -668,7 +709,7 @@ export default function AdminPage() {
 
         <CollapsibleSection
           title="Users"
-          subtitle="Search users, sort them, and control admin access."
+          subtitle="Search users, sort them, and manually control both admin and paid access."
           isOpen={openSections.users}
           onToggle={() => toggleSection("users")}
           right={
@@ -703,53 +744,92 @@ export default function AdminPage() {
                   <th className="px-3 py-3 font-black">Transmission</th>
                   <th className="px-3 py-3 font-black">Joined</th>
                   <th className="px-3 py-3 font-black">Role</th>
-                  <th className="px-3 py-3 font-black">Action</th>
+                  <th className="px-3 py-3 font-black">Access</th>
+                  <th className="px-3 py-3 font-black">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className="border-t" style={{ borderColor: BRAND.border }}>
-                    <td className="px-3 py-3">{user.name || "—"}</td>
-                    <td className="px-3 py-3">{user.email || "—"}</td>
-                    <td className="px-3 py-3 capitalize">{user.transmission || "—"}</td>
-                    <td className="px-3 py-3">
-                      {user.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}
-                    </td>
-                    <td className="px-3 py-3">
-                      <span
-                        className="rounded-full px-3 py-1 text-xs font-black"
-                        style={{
-                          backgroundColor: user.is_admin ? BRAND.greenLight : BRAND.blueLight,
-                          color: user.is_admin ? BRAND.green : BRAND.navy,
-                        }}
-                      >
-                        {user.is_admin ? "Admin" : "User"}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3">
-                      <button
-                        onClick={() => toggleUserAdmin(user)}
-                        disabled={userAdminBusyId === user.id}
-                        className="rounded-2xl px-3 py-2 text-xs font-bold"
-                        style={{
-                          backgroundColor: BRAND.navy,
-                          color: BRAND.white,
-                          opacity: userAdminBusyId === user.id ? 0.7 : 1,
-                        }}
-                      >
-                        {userAdminBusyId === user.id
-                          ? "Saving..."
-                          : user.is_admin
-                          ? "Remove admin"
-                          : "Make admin"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {filteredUsers.map((user) => {
+                  const paid = isPaidStatus(user.subscription_status);
+
+                  return (
+                    <tr key={user.id} className="border-t" style={{ borderColor: BRAND.border }}>
+                      <td className="px-3 py-3">{user.name || "—"}</td>
+                      <td className="px-3 py-3">{user.email || "—"}</td>
+                      <td className="px-3 py-3 capitalize">{user.transmission || "—"}</td>
+                      <td className="px-3 py-3">
+                        {user.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}
+                      </td>
+                      <td className="px-3 py-3">
+                        <span
+                          className="rounded-full px-3 py-1 text-xs font-black"
+                          style={{
+                            backgroundColor: user.is_admin ? BRAND.greenLight : BRAND.blueLight,
+                            color: user.is_admin ? BRAND.green : BRAND.navy,
+                          }}
+                        >
+                          {user.is_admin ? "Admin" : "User"}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3">
+                        <span
+                          className="rounded-full px-3 py-1 text-xs font-black"
+                          style={{
+                            backgroundColor: paid ? BRAND.greenLight : BRAND.yellowLight,
+                            color: paid ? BRAND.green : BRAND.navy,
+                          }}
+                        >
+                          {paid ? "Paid" : "Free"}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => toggleUserAdmin(user)}
+                            disabled={userAdminBusyId === user.id}
+                            className="rounded-2xl px-3 py-2 text-xs font-bold"
+                            style={{
+                              backgroundColor: BRAND.navy,
+                              color: BRAND.white,
+                              opacity: userAdminBusyId === user.id ? 0.7 : 1,
+                            }}
+                          >
+                            {userAdminBusyId === user.id
+                              ? "Saving..."
+                              : user.is_admin
+                              ? "Remove admin"
+                              : "Make admin"}
+                          </button>
+
+                          <button
+                            onClick={() => toggleUserPaid(user)}
+                            disabled={userPaidBusyId === user.id}
+                            className="rounded-2xl px-3 py-2 text-xs font-bold"
+                            style={{
+                              backgroundColor: paid ? BRAND.red : BRAND.green,
+                              color: BRAND.white,
+                              opacity: userPaidBusyId === user.id ? 0.7 : 1,
+                            }}
+                          >
+                            {userPaidBusyId === user.id
+                              ? "Saving..."
+                              : paid
+                              ? "Make free"
+                              : "Make paid"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
 
-            {filteredUsers.length === 0 && <div className="mt-4"><EmptyCard text="No users found." /></div>}
+            {filteredUsers.length === 0 && (
+              <div className="mt-4">
+                <EmptyCard text="No users found." />
+              </div>
+            )}
           </div>
         </CollapsibleSection>
       </div>
