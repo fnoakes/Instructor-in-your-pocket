@@ -591,6 +591,7 @@ function calculateScoring(ratings, transmission) {
         completedCount: sectionCompletedCount,
         visibleSkills,
       });
+
       if (sectionCompletedCount > 0) lastCompletedSection = section.title;
     }
   });
@@ -684,8 +685,8 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(false);
   const [expandedSections, setExpandedSections] = useState(() => {
     const initial = {};
-    SYLLABUS.forEach((section, index) => {
-      initial[section.id] = index < 2;
+    SYLLABUS.forEach((section) => {
+      initial[section.id] = false;
     });
     return initial;
   });
@@ -697,6 +698,7 @@ export default function App() {
   const [learnVideoIndices, setLearnVideoIndices] = useState(() => randomIndices(4, 18));
   const [centreSearch, setCentreSearch] = useState("");
   const [centreVideos, setCentreVideos] = useState(() => randomItems(TEST_CENTRE_VIDEOS, 4));
+  const [replyDrafts, setReplyDrafts] = useState({});
   const initialHydratedRef = useRef(false);
 
   async function loadProfileRow(supabase, user) {
@@ -729,30 +731,59 @@ export default function App() {
         return;
       }
 
+      const userId = data.user.id;
       setCommunityLoading(true);
       const supabase = createClient();
 
-      const { data: postsRows, error } = await supabase
-        .from("community_posts")
-        .select("*")
-        .eq("is_hidden", false)
-        .order("created_at", { ascending: false });
+      const [postsRes, repliesRes, likesRes] = await Promise.all([
+        supabase
+          .from("community_posts")
+          .select("*")
+          .eq("is_hidden", false)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("community_replies")
+          .select("*")
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("community_likes")
+          .select("*"),
+      ]);
 
-      if (error) {
-        console.error("COMMUNITY LOAD ERROR:", error);
+      if (postsRes.error) {
+        console.error("COMMUNITY LOAD ERROR:", postsRes.error);
         setCommunityPosts([]);
         return;
       }
 
+      const replies = repliesRes.data || [];
+      const likes = likesRes.data || [];
+
       setCommunityPosts(
-        (postsRows || []).map((post) => ({
-          id: post.id,
-          author: post.author_name || "Learner",
-          subject: post.subject,
-          body: post.body,
-          tag: post.tag || "General",
-          createdAt: new Date(post.created_at).toLocaleDateString(),
-        }))
+        (postsRes.data || []).map((post) => {
+          const postReplies = replies
+            .filter((reply) => reply.post_id === post.id)
+            .map((reply) => ({
+              id: reply.id,
+              author: reply.author_name || "Learner",
+              body: reply.body,
+              createdAt: new Date(reply.created_at).toLocaleDateString(),
+            }));
+
+          const postLikes = likes.filter((like) => like.post_id === post.id);
+
+          return {
+            id: post.id,
+            author: post.author_name || "Learner",
+            subject: post.subject,
+            body: post.body,
+            tag: post.tag || "General",
+            createdAt: new Date(post.created_at).toLocaleDateString(),
+            likesCount: postLikes.length,
+            likedByMe: postLikes.some((like) => like.user_id === userId),
+            replies: postReplies,
+          };
+        })
       );
     } catch (error) {
       console.error(error);
@@ -963,6 +994,7 @@ export default function App() {
     setSelectedRatings([]);
     setNewPost({ subject: "", body: "", tag: "General" });
     setNewTicket({ subject: "", message: "", links: "" });
+    setReplyDrafts({});
     setSaveState("Saved");
   }
 
@@ -1107,11 +1139,126 @@ export default function App() {
           body: insertedPost.body,
           tag: insertedPost.tag || "General",
           createdAt: new Date(insertedPost.created_at).toLocaleDateString(),
+          likesCount: 0,
+          likedByMe: false,
+          replies: [],
         },
         ...prev,
       ]);
 
       setNewPost({ subject: "", body: "", tag: "General" });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function toggleLike(postId) {
+    try {
+      const { data, error } = await getCurrentUser();
+      if (error || !data?.user) return;
+
+      const userId = data.user.id;
+      const supabase = createClient();
+      const post = communityPosts.find((item) => item.id === postId);
+      if (!post) return;
+
+      if (post.likedByMe) {
+        const { error: deleteError } = await supabase
+          .from("community_likes")
+          .delete()
+          .eq("post_id", postId)
+          .eq("user_id", userId);
+
+        if (deleteError) {
+          console.error("COMMUNITY UNLIKE ERROR:", deleteError);
+          return;
+        }
+
+        setCommunityPosts((prev) =>
+          prev.map((item) =>
+            item.id === postId
+              ? {
+                  ...item,
+                  likedByMe: false,
+                  likesCount: Math.max(0, item.likesCount - 1),
+                }
+              : item
+          )
+        );
+      } else {
+        const { error: insertError } = await supabase.from("community_likes").insert({
+          post_id: postId,
+          user_id: userId,
+        });
+
+        if (insertError) {
+          console.error("COMMUNITY LIKE ERROR:", insertError);
+          return;
+        }
+
+        setCommunityPosts((prev) =>
+          prev.map((item) =>
+            item.id === postId
+              ? {
+                  ...item,
+                  likedByMe: true,
+                  likesCount: item.likesCount + 1,
+                }
+              : item
+          )
+        );
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function submitReply(postId) {
+    const body = (replyDrafts[postId] || "").trim();
+    if (!body) return;
+
+    try {
+      const { data, error } = await getCurrentUser();
+      if (error || !data?.user) return;
+
+      const supabase = createClient();
+
+      const { data: insertedReply, error: insertError } = await supabase
+        .from("community_replies")
+        .insert({
+          post_id: postId,
+          user_id: data.user.id,
+          author_name: profile.name || "Learner",
+          body,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("COMMUNITY REPLY ERROR:", insertError);
+        return;
+      }
+
+      setCommunityPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                replies: [
+                  ...post.replies,
+                  {
+                    id: insertedReply.id,
+                    author: insertedReply.author_name || "Learner",
+                    body: insertedReply.body,
+                    createdAt: new Date(insertedReply.created_at).toLocaleDateString(),
+                  },
+                ],
+              }
+            : post
+        )
+      );
+
+      setReplyDrafts((prev) => ({ ...prev, [postId]: "" }));
     } catch (error) {
       console.error(error);
     }
@@ -1229,6 +1376,10 @@ export default function App() {
                 newPost={newPost}
                 setNewPost={setNewPost}
                 submitPost={submitPost}
+                replyDrafts={replyDrafts}
+                setReplyDrafts={setReplyDrafts}
+                submitReply={submitReply}
+                toggleLike={toggleLike}
               />
             )}
 
@@ -1444,28 +1595,6 @@ function LandingPage({
             {authLoading ? "Please wait..." : authMode === "signin" ? "Sign in" : "Create profile"}
           </button>
         </form>
-
-        <div className="mt-6">
-          <p className="mb-3 text-xs font-black uppercase tracking-[0.22em]" style={{ color: BRAND.slate }}>
-            More sign-in options later
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <button
-              disabled
-              className="rounded-2xl px-4 py-3 text-sm font-bold ring-1 opacity-50"
-              style={{ backgroundColor: BRAND.white, color: BRAND.navy, borderColor: BRAND.border }}
-            >
-              Google coming later
-            </button>
-            <button
-              disabled
-              className="rounded-2xl px-4 py-3 text-sm font-bold ring-1 opacity-50"
-              style={{ backgroundColor: BRAND.white, color: BRAND.navy, borderColor: BRAND.border }}
-            >
-              Apple coming later
-            </button>
-          </div>
-        </div>
       </section>
     </div>
   );
@@ -1660,7 +1789,7 @@ function Dashboard({ scoring, profile }) {
               style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}
             >
               <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.slate }}>
-                Just so you know
+                Just so you know...
               </p>
               <p className="mt-2 max-w-[240px] text-sm leading-6" style={{ color: BRAND.slate }}>
                 {scoring.message}
@@ -1742,7 +1871,7 @@ function ProgressTrackerPage({
             </p>
             <h2 className="mt-1 text-3xl font-black tracking-tight">Build your score properly</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 sm:text-base" style={{ color: BRAND.slate }}>
-              Filtered for <span className="font-bold" style={{ color: BRAND.navy }}>{transmission}</span>. Search for something specific or click the rating chips to instantly show everything you’ve marked that way.
+              Filtered for <span className="font-bold" style={{ color: BRAND.navy }}>{transmission}</span>. Search for something specific or click the rating chips to instantly show everything you’ve marked that way, tap the topics to expand them and see their subjects.
             </p>
           </div>
 
@@ -2221,15 +2350,6 @@ function TestCentresPage({ centreSearch, setCentreSearch, centreVideos, refreshC
             </div>
             <div className="p-4">
               <h3 className="text-xl font-black" style={{ color: BRAND.navy }}>{item.centre}</h3>
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 inline-block rounded-2xl px-4 py-3 text-sm font-bold"
-                style={{ backgroundColor: BRAND.yellowLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
-              >
-                Open on YouTube
-              </a>
             </div>
           </div>
         ))}
@@ -2246,7 +2366,18 @@ function TestCentresPage({ centreSearch, setCentreSearch, centreVideos, refreshC
   );
 }
 
-function CommunityPage({ profile, posts, loading, newPost, setNewPost, submitPost }) {
+function CommunityPage({
+  profile,
+  posts,
+  loading,
+  newPost,
+  setNewPost,
+  submitPost,
+  replyDrafts,
+  setReplyDrafts,
+  submitReply,
+  toggleLike,
+}) {
   return (
     <div className="grid gap-4 xl:gap-6 xl:grid-cols-[0.95fr,1.05fr]">
       <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
@@ -2255,7 +2386,7 @@ function CommunityPage({ profile, posts, loading, newPost, setNewPost, submitPos
         </p>
         <h2 className="mt-1 text-3xl font-black tracking-tight">Learner forum</h2>
         <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
-          Proper learner-driver reddit energy, just with fewer weird tangents and more actual driving chat.
+          Post a comment, ask a question, shout about your success, vent about your frustrations.
         </p>
 
         <form onSubmit={submitPost} className="mt-5 rounded-[22px] p-4 ring-1 sm:mt-6 sm:rounded-[28px] sm:p-5" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
@@ -2340,7 +2471,62 @@ function CommunityPage({ profile, posts, loading, newPost, setNewPost, submitPos
 
               <h3 className="mt-4 text-xl font-black">{post.subject}</h3>
               <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>{post.body}</p>
-              <p className="mt-4 text-xs" style={{ color: BRAND.slate }}>{post.createdAt}</p>
+
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => toggleLike(post.id)}
+                  className="rounded-2xl px-4 py-2 text-sm font-bold"
+                  style={
+                    post.likedByMe
+                      ? { backgroundColor: BRAND.navy, color: BRAND.white }
+                      : { backgroundColor: BRAND.blueLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }
+                  }
+                >
+                  {post.likedByMe ? "Liked" : "Like"} · {post.likesCount}
+                </button>
+
+                <span className="text-xs" style={{ color: BRAND.slate }}>
+                  {post.replies.length} {post.replies.length === 1 ? "reply" : "replies"} · {post.createdAt}
+                </span>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {post.replies.map((reply) => (
+                  <div
+                    key={reply.id}
+                    className="rounded-2xl p-3 ring-1"
+                    style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}
+                  >
+                    <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.navy }}>
+                      {reply.author}
+                    </p>
+                    <p className="mt-1 text-sm" style={{ color: BRAND.slate }}>
+                      {reply.body}
+                    </p>
+                    <p className="mt-2 text-xs" style={{ color: BRAND.slate }}>
+                      {reply.createdAt}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4">
+                <textarea
+                  value={replyDrafts[post.id] || ""}
+                  onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [post.id]: e.target.value }))}
+                  rows={3}
+                  placeholder="Write a reply..."
+                  className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none"
+                  style={{ borderColor: BRAND.border }}
+                />
+                <button
+                  onClick={() => submitReply(post.id)}
+                  className="mt-3 rounded-2xl px-4 py-3 text-sm font-bold"
+                  style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
+                >
+                  Reply
+                </button>
+              </div>
             </article>
           ))
         )}

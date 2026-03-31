@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { getCurrentUser } from "../../lib/supabase/auth.js";
 import { createClient } from "../../lib/supabase/client.js";
-import { getCurrentUser, signOutUser } from "../../lib/supabase/auth.js";
 
 const BRAND = {
   blue: "#7acef4",
@@ -22,119 +22,129 @@ const BRAND = {
 export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [profile, setProfile] = useState(null);
 
   const [tickets, setTickets] = useState([]);
-  const [replies, setReplies] = useState([]);
   const [communityPosts, setCommunityPosts] = useState([]);
   const [users, setUsers] = useState([]);
 
-  const [replyDrafts, setReplyDrafts] = useState({});
-  const [ticketFilter, setTicketFilter] = useState("all");
   const [ticketSearch, setTicketSearch] = useState("");
-
+  const [archiveSearch, setArchiveSearch] = useState("");
   const [communitySearch, setCommunitySearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
   const [userSort, setUserSort] = useState("newest");
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      loadAdminDashboard();
-    }, 300);
+  const [replyDrafts, setReplyDrafts] = useState({});
+  const [savingReplyId, setSavingReplyId] = useState(null);
+  const [hideBusyId, setHideBusyId] = useState(null);
+  const [userAdminBusyId, setUserAdminBusyId] = useState(null);
 
-    return () => clearTimeout(timeout);
-  }, []);
+  const [openSections, setOpenSections] = useState({
+    inbox: false,
+    archive: false,
+    community: false,
+    users: false,
+  });
+
+  function toggleSection(sectionKey) {
+    setOpenSections((prev) => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey],
+    }));
+  }
 
   async function loadAdminDashboard() {
     try {
       setIsLoading(true);
 
-      const { data, error } = await getCurrentUser();
-
-      if (error || !data?.user) {
+      const { data: authData, error: authError } = await getCurrentUser();
+      if (authError || !authData?.user) {
         setIsAdmin(false);
         setIsLoading(false);
         return;
       }
 
       const supabase = createClient();
+      const user = authData.user;
 
-      let me = null;
+      const { data: meById } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
 
-const { data: meById } = await supabase
-  .from("profiles")
-  .select("*")
-  .eq("id", data.user.id)
-  .maybeSingle();
+      let me = meById || null;
 
-me = meById || null;
+      if (!me && user.email) {
+        const { data: meByEmail } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("email", user.email)
+          .maybeSingle();
 
-if (!me && data.user.email) {
-  const { data: meByEmail } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("email", data.user.email)
-    .maybeSingle();
+        me = meByEmail || null;
+      }
 
-  me = meByEmail || null;
-}
+      if (!me || !me.is_admin) {
+        setIsAdmin(false);
+        setIsLoading(false);
+        return;
+      }
 
-const adminEmails = ["f.noakes1@gmail.com"];
+      setIsAdmin(true);
 
-if (!me) {
-  if (adminEmails.includes((data.user.email || "").toLowerCase())) {
-    setProfile({
-      name: "Francis",
-      email: data.user.email,
-      transmission: "manual",
-      is_admin: true,
-    });
-    setIsAdmin(true);
-  } else {
-    console.error("ADMIN PROFILE LOAD ERROR: no matching profile found");
-    setIsAdmin(false);
-    setIsLoading(false);
-    return;
-  }
-} else if (me.is_admin || adminEmails.includes((data.user.email || "").toLowerCase())) {
-  setProfile(me);
-  setIsAdmin(true);
-} else {
-  setProfile(me);
-  setIsAdmin(false);
-  setIsLoading(false);
-  return;
-}
+      const [ticketsRes, repliesRes, communityRes, communityRepliesRes, communityLikesRes, usersRes] =
+        await Promise.all([
+          supabase.from("ask_francis_tickets").select("*").order("created_at", { ascending: false }),
+          supabase.from("ask_francis_replies").select("*").order("created_at", { ascending: true }),
+          supabase.from("community_posts").select("*").order("created_at", { ascending: false }),
+          supabase.from("community_replies").select("*").order("created_at", { ascending: true }),
+          supabase.from("community_likes").select("*"),
+          supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+        ]);
 
-      const [ticketsRes, repliesRes, communityRes, usersRes] = await Promise.all([
-        supabase.from("ask_francis_tickets").select("*").order("created_at", { ascending: false }),
-        supabase.from("ask_francis_replies").select("*").order("created_at", { ascending: true }),
-        supabase.from("community_posts").select("*").order("created_at", { ascending: false }),
-        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-      ]);
+      if (ticketsRes.error) console.error("ADMIN TICKETS LOAD ERROR:", ticketsRes.error);
+      if (repliesRes.error) console.error("ADMIN TICKET REPLIES LOAD ERROR:", repliesRes.error);
+      if (communityRes.error) console.error("ADMIN COMMUNITY LOAD ERROR:", communityRes.error);
+      if (communityRepliesRes.error) console.error("ADMIN COMMUNITY REPLIES LOAD ERROR:", communityRepliesRes.error);
+      if (communityLikesRes.error) console.error("ADMIN COMMUNITY LIKES LOAD ERROR:", communityLikesRes.error);
+      if (usersRes.error) console.error("ADMIN USERS LOAD ERROR:", usersRes.error);
 
-      if (ticketsRes.error) console.error("ADMIN TICKETS ERROR:", ticketsRes.error);
-      if (repliesRes.error) console.error("ADMIN REPLIES ERROR:", repliesRes.error);
-      if (communityRes.error) console.error("ADMIN COMMUNITY ERROR:", communityRes.error);
-      if (usersRes.error) console.error("ADMIN USERS ERROR:", usersRes.error);
+      const ticketReplies = repliesRes.data || [];
+      const communityReplies = communityRepliesRes.data || [];
+      const communityLikes = communityLikesRes.data || [];
 
-      setTickets(ticketsRes.data || []);
-      setReplies(repliesRes.data || []);
-      setCommunityPosts(communityRes.data || []);
+      const builtTickets = (ticketsRes.data || []).map((ticket) => ({
+        ...ticket,
+        replies: ticketReplies.filter((reply) => reply.ticket_id === ticket.id),
+      }));
+
+      const builtCommunityPosts = (communityRes.data || []).map((post) => ({
+        ...post,
+        replies: communityReplies.filter((reply) => reply.post_id === post.id),
+        likesCount: communityLikes.filter((like) => like.post_id === post.id).length,
+      }));
+
+      setTickets(builtTickets);
+      setCommunityPosts(builtCommunityPosts);
       setUsers(usersRes.data || []);
     } catch (error) {
-      console.error("ADMIN DASHBOARD ERROR:", error);
+      console.error(error);
       setIsAdmin(false);
     } finally {
       setIsLoading(false);
     }
   }
 
+  useEffect(() => {
+    loadAdminDashboard();
+  }, []);
+
   async function handleReply(ticketId) {
     const replyText = (replyDrafts[ticketId] || "").trim();
     if (!replyText) return;
 
     try {
+      setSavingReplyId(ticketId);
       const supabase = createClient();
 
       const { error: replyError } = await supabase.from("ask_francis_replies").insert({
@@ -143,149 +153,163 @@ if (!me) {
       });
 
       if (replyError) {
-        console.error(replyError);
+        console.error("ADMIN REPLY INSERT ERROR:", replyError);
         return;
       }
 
-      const { error: ticketUpdateError } = await supabase
+      const { error: updateError } = await supabase
         .from("ask_francis_tickets")
-        .update({ status: "Answered" })
+        .update({
+          status: "Archived",
+        })
         .eq("id", ticketId);
 
-      if (ticketUpdateError) {
-        console.error(ticketUpdateError);
+      if (updateError) {
+        console.error("ADMIN TICKET ARCHIVE ERROR:", updateError);
+        return;
       }
 
       setReplyDrafts((prev) => ({ ...prev, [ticketId]: "" }));
       await loadAdminDashboard();
     } catch (error) {
       console.error(error);
+    } finally {
+      setSavingReplyId(null);
     }
   }
 
-  async function toggleHidden(post) {
+  async function toggleCommunityHidden(post) {
     try {
+      setHideBusyId(post.id);
       const supabase = createClient();
 
       const { error } = await supabase
         .from("community_posts")
         .update({
           is_hidden: !post.is_hidden,
-          hidden_at: !post.is_hidden ? new Date().toISOString() : null,
         })
         .eq("id", post.id);
 
       if (error) {
-        console.error(error);
+        console.error("ADMIN COMMUNITY TOGGLE ERROR:", error);
         return;
       }
 
       await loadAdminDashboard();
     } catch (error) {
       console.error(error);
+    } finally {
+      setHideBusyId(null);
     }
   }
 
-  async function deletePost(postId) {
-    const confirmed = window.confirm("Delete this community post permanently?");
-    if (!confirmed) return;
-
+  async function toggleUserAdmin(userRow) {
     try {
+      setUserAdminBusyId(userRow.id);
       const supabase = createClient();
-      const { error } = await supabase.from("community_posts").delete().eq("id", postId);
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          is_admin: !userRow.is_admin,
+        })
+        .eq("id", userRow.id);
 
       if (error) {
-        console.error(error);
+        console.error("ADMIN USER ROLE TOGGLE ERROR:", error);
         return;
       }
 
       await loadAdminDashboard();
     } catch (error) {
       console.error(error);
+    } finally {
+      setUserAdminBusyId(null);
     }
   }
 
-  async function signOut() {
-    try {
-      await signOutUser();
-      window.location.href = "/";
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  const filteredTickets = useMemo(() => {
-    const query = ticketSearch.trim().toLowerCase();
-
+  const activeTickets = useMemo(() => {
+    const q = ticketSearch.trim().toLowerCase();
     return tickets.filter((ticket) => {
-      const matchesFilter =
-        ticketFilter === "all" ||
-        (ticketFilter === "awaiting" && ticket.status !== "Answered") ||
-        (ticketFilter === "answered" && ticket.status === "Answered");
+      const archived = (ticket.status || "").toLowerCase() === "archived";
+      if (archived) return false;
 
-      const matchesSearch =
-        !query ||
-        ticket.subject?.toLowerCase().includes(query) ||
-        ticket.message?.toLowerCase().includes(query) ||
-        ticket.links?.toLowerCase().includes(query);
+      if (!q) return true;
 
-      return matchesFilter && matchesSearch;
+      return (
+        (ticket.subject || "").toLowerCase().includes(q) ||
+        (ticket.message || "").toLowerCase().includes(q) ||
+        (ticket.links || "").toLowerCase().includes(q)
+      );
     });
-  }, [tickets, ticketFilter, ticketSearch]);
+  }, [tickets, ticketSearch]);
+
+  const archivedTickets = useMemo(() => {
+    const q = archiveSearch.trim().toLowerCase();
+    return tickets.filter((ticket) => {
+      const archived = (ticket.status || "").toLowerCase() === "archived";
+      if (!archived) return false;
+
+      if (!q) return true;
+
+      return (
+        (ticket.subject || "").toLowerCase().includes(q) ||
+        (ticket.message || "").toLowerCase().includes(q) ||
+        (ticket.links || "").toLowerCase().includes(q) ||
+        ticket.replies.some((reply) => (reply.reply_text || "").toLowerCase().includes(q))
+      );
+    });
+  }, [tickets, archiveSearch]);
 
   const filteredCommunityPosts = useMemo(() => {
-    const query = communitySearch.trim().toLowerCase();
-
+    const q = communitySearch.trim().toLowerCase();
     return communityPosts.filter((post) => {
+      if (!q) return true;
       return (
-        !query ||
-        post.author_name?.toLowerCase().includes(query) ||
-        post.subject?.toLowerCase().includes(query) ||
-        post.body?.toLowerCase().includes(query) ||
-        post.tag?.toLowerCase().includes(query)
+        (post.subject || "").toLowerCase().includes(q) ||
+        (post.body || "").toLowerCase().includes(q) ||
+        (post.author_name || "").toLowerCase().includes(q) ||
+        (post.tag || "").toLowerCase().includes(q)
       );
     });
   }, [communityPosts, communitySearch]);
 
   const filteredUsers = useMemo(() => {
-    const query = userSearch.trim().toLowerCase();
+    const q = userSearch.trim().toLowerCase();
 
-    let next = users.filter((user) => {
+    const filtered = users.filter((user) => {
+      if (!q) return true;
       return (
-        !query ||
-        user.name?.toLowerCase().includes(query) ||
-        user.email?.toLowerCase().includes(query) ||
-        user.transmission?.toLowerCase().includes(query)
+        (user.name || "").toLowerCase().includes(q) ||
+        (user.email || "").toLowerCase().includes(q) ||
+        (user.transmission || "").toLowerCase().includes(q)
       );
     });
 
-    next.sort((a, b) => {
-      if (userSort === "newest") {
-        return new Date(b.created_at || 0) - new Date(a.created_at || 0);
-      }
-      if (userSort === "oldest") {
-        return new Date(a.created_at || 0) - new Date(b.created_at || 0);
-      }
-      if (userSort === "name-asc") {
-        return (a.name || "").localeCompare(b.name || "");
-      }
-      if (userSort === "name-desc") {
-        return (b.name || "").localeCompare(a.name || "");
-      }
-      return 0;
-    });
+    if (userSort === "name-az") {
+      filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    } else if (userSort === "name-za") {
+      filtered.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
+    } else if (userSort === "oldest") {
+      filtered.sort(
+        (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+      );
+    } else {
+      filtered.sort(
+        (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+      );
+    }
 
-    return next;
+    return filtered;
   }, [users, userSearch, userSort]);
-
-  function repliesForTicket(ticketId) {
-    return replies.filter((reply) => reply.ticket_id === ticketId);
-  }
 
   if (isLoading) {
     return (
       <div className="min-h-screen p-6" style={{ backgroundColor: BRAND.blueLight }}>
-        <div className="mx-auto max-w-7xl rounded-[32px] bg-white p-8 ring-1" style={{ borderColor: BRAND.border }}>
+        <div
+          className="mx-auto max-w-7xl rounded-[28px] bg-white p-8 ring-1"
+          style={{ borderColor: BRAND.border }}
+        >
           <p style={{ color: BRAND.slate }}>Loading admin dashboard...</p>
         </div>
       </div>
@@ -295,7 +319,10 @@ if (!me) {
   if (!isAdmin) {
     return (
       <div className="min-h-screen p-6" style={{ backgroundColor: BRAND.blueLight }}>
-        <div className="mx-auto max-w-4xl rounded-[32px] bg-white p-8 ring-1" style={{ borderColor: BRAND.border }}>
+        <div
+          className="mx-auto max-w-3xl rounded-[28px] bg-white p-8 ring-1"
+          style={{ borderColor: BRAND.border }}
+        >
           <h1 className="text-3xl font-black" style={{ color: BRAND.navy }}>
             Not authorised
           </h1>
@@ -305,7 +332,10 @@ if (!me) {
           <a
             href="/"
             className="mt-6 inline-block rounded-2xl px-4 py-3 text-sm font-bold"
-            style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
+            style={{
+              backgroundColor: BRAND.navy,
+              color: BRAND.white,
+            }}
           >
             Back to app
           </a>
@@ -316,266 +346,337 @@ if (!me) {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen p-4 sm:p-6"
       style={{
-        background: `linear-gradient(180deg, ${BRAND.blueLight} 0%, ${BRAND.white} 35%, ${BRAND.yellowLight} 100%)`,
+        background: `linear-gradient(180deg, ${BRAND.blueLight} 0%, ${BRAND.white} 50%, ${BRAND.yellowLight} 100%)`,
       }}
     >
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <header
-          className="mb-6 rounded-[32px] bg-white p-6 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1"
+      <div className="mx-auto max-w-7xl space-y-6">
+        <section
+          className="rounded-[28px] bg-white p-6 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1"
           style={{ borderColor: BRAND.border }}
         >
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
                 Admin dashboard
               </p>
-              <h1 className="mt-1 text-4xl font-black" style={{ color: BRAND.navy }}>
-                Instructor In Your Pocket
+              <h1 className="mt-1 text-4xl font-black tracking-tight" style={{ color: BRAND.navy }}>
+                Instructor In Your Pocket admin
               </h1>
-              <p className="mt-2 text-sm" style={{ color: BRAND.slate }}>
-                Signed in as {profile?.name || profile?.email}
+              <p className="mt-3 max-w-3xl text-sm leading-6" style={{ color: BRAND.slate }}>
+                Reply to Ask Francis tickets, auto-archive answered support messages, moderate community posts, and search your user base properly.
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={loadAdminDashboard}
-                className="rounded-2xl px-4 py-3 text-sm font-bold"
-                style={{ backgroundColor: BRAND.blueLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
-              >
-                Refresh
-              </button>
-              <button
-                onClick={signOut}
-                className="rounded-2xl px-4 py-3 text-sm font-bold"
-                style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
-              >
-                Sign out
-              </button>
-            </div>
+            <a
+              href="/"
+              className="inline-block rounded-2xl px-4 py-3 text-sm font-bold"
+              style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
+            >
+              Back to main app
+            </a>
           </div>
-        </header>
-
-        <section className="grid gap-4 md:grid-cols-3">
-          <SummaryCard label="Ask Francis tickets" value={tickets.length} />
-          <SummaryCard label="Community posts" value={communityPosts.length} />
-          <SummaryCard label="Users" value={users.length} />
         </section>
 
-        <section className="mt-6 rounded-[32px] bg-white p-6 ring-1" style={{ borderColor: BRAND.border }}>
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
-                Ask Francis
-              </p>
-              <h2 className="mt-1 text-2xl font-black">All questions</h2>
-            </div>
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="Open tickets" value={activeTickets.length} />
+          <StatCard label="Archived tickets" value={archivedTickets.length} />
+          <StatCard label="Community posts" value={communityPosts.length} />
+          <StatCard label="Users" value={users.length} />
+        </section>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <input
-                value={ticketSearch}
-                onChange={(e) => setTicketSearch(e.target.value)}
-                placeholder="Search questions"
-                className="rounded-2xl border px-4 py-3 text-sm outline-none"
-                style={{ borderColor: BRAND.border }}
-              />
-              <select
-                value={ticketFilter}
-                onChange={(e) => setTicketFilter(e.target.value)}
-                className="rounded-2xl border px-4 py-3 text-sm outline-none"
-                style={{ borderColor: BRAND.border }}
-              >
-                <option value="all">All tickets</option>
-                <option value="awaiting">Awaiting reply</option>
-                <option value="answered">Answered</option>
-              </select>
-            </div>
-          </div>
+        <CollapsibleSection
+          title="Ask Francis inbox"
+          subtitle="Replying to a ticket will archive it automatically."
+          isOpen={openSections.inbox}
+          onToggle={() => toggleSection("inbox")}
+          right={
+            <input
+              value={ticketSearch}
+              onChange={(e) => setTicketSearch(e.target.value)}
+              placeholder="Search open tickets..."
+              className="w-full rounded-2xl border px-4 py-3 text-sm outline-none lg:max-w-sm"
+              style={{ borderColor: BRAND.border }}
+            />
+          }
+        >
+          <div className="space-y-4">
+            {activeTickets.length === 0 ? (
+              <EmptyCard text="No open tickets right now." />
+            ) : (
+              activeTickets.map((ticket) => (
+                <div
+                  key={ticket.id}
+                  className="rounded-[24px] p-5 ring-1"
+                  style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}
+                >
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className="rounded-full px-3 py-1 text-xs font-black"
+                          style={{ backgroundColor: BRAND.yellowLight, color: BRAND.navy }}
+                        >
+                          {ticket.status || "Awaiting reply"}
+                        </span>
+                        <span className="text-xs" style={{ color: BRAND.slate }}>
+                          {new Date(ticket.created_at).toLocaleString()}
+                        </span>
+                      </div>
 
-          <div className="mt-6 space-y-4">
-            {filteredTickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                className="rounded-[28px] p-5 ring-1"
-                style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-xl font-black">{ticket.subject}</h3>
-                    <p className="mt-1 text-xs uppercase tracking-[0.18em]" style={{ color: BRAND.slate }}>
-                      {new Date(ticket.created_at).toLocaleString()}
-                    </p>
-                    <p className="mt-1 text-sm" style={{ color: BRAND.slate }}>
-                      User ID: {ticket.user_id}
-                    </p>
-                  </div>
-
-                  <span
-                    className="rounded-full px-3 py-1 text-xs font-black"
-                    style={{
-                      backgroundColor: ticket.status === "Answered" ? BRAND.greenLight : BRAND.yellowLight,
-                      color: ticket.status === "Answered" ? BRAND.green : BRAND.navy,
-                      border: `1px solid ${BRAND.border}`,
-                    }}
-                  >
-                    {ticket.status}
-                  </span>
-                </div>
-
-                <p className="mt-4 text-sm leading-6" style={{ color: BRAND.slate }}>
-                  {ticket.message}
-                </p>
-
-                {ticket.links ? (
-                  <div
-                    className="mt-4 rounded-2xl p-3 ring-1"
-                    style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}
-                  >
-                    <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.navy }}>
-                      Links
-                    </p>
-                    <p className="mt-1 text-sm break-words" style={{ color: BRAND.slate }}>
-                      {ticket.links}
-                    </p>
-                  </div>
-                ) : null}
-
-                <div className="mt-4 space-y-3">
-                  {repliesForTicket(ticket.id).map((reply) => (
-                    <div
-                      key={reply.id}
-                      className="rounded-2xl p-3 ring-1"
-                      style={{ backgroundColor: BRAND.greenLight, borderColor: BRAND.border }}
-                    >
-                      <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.green }}>
-                        Your reply
+                      <h3 className="mt-3 text-xl font-black">{ticket.subject}</h3>
+                      <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
+                        {ticket.message}
                       </p>
-                      <p className="mt-1 text-sm" style={{ color: BRAND.slate }}>
-                        {reply.reply_text}
-                      </p>
+
+                      {ticket.links ? (
+                        <div
+                          className="mt-3 rounded-2xl p-3 ring-1"
+                          style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}
+                        >
+                          <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.navy }}>
+                            Links
+                          </p>
+                          <p className="mt-1 break-words text-sm" style={{ color: BRAND.slate }}>
+                            {ticket.links}
+                          </p>
+                        </div>
+                      ) : null}
                     </div>
-                  ))}
-                </div>
 
-                <div className="mt-4">
-                  <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>
-                    Reply
-                  </label>
-                  <textarea
-                    value={replyDrafts[ticket.id] || ""}
-                    onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [ticket.id]: e.target.value }))}
-                    rows={4}
-                    placeholder="Write your reply here..."
-                    className="w-full rounded-2xl border px-4 py-3 text-sm outline-none"
-                    style={{ borderColor: BRAND.border }}
-                  />
-                  <button
-                    onClick={() => handleReply(ticket.id)}
-                    className="mt-3 rounded-2xl px-4 py-3 text-sm font-bold"
-                    style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
-                  >
-                    Send reply
-                  </button>
+                    <div
+                      className="rounded-2xl px-3 py-2 text-xs font-semibold"
+                      style={{ backgroundColor: BRAND.blueLight, color: BRAND.navy }}
+                    >
+                      {ticket.replies.length} replies
+                    </div>
+                  </div>
+
+                  {ticket.replies.length > 0 && (
+                    <div className="mt-4 space-y-3">
+                      {ticket.replies.map((reply) => (
+                        <div
+                          key={reply.id}
+                          className="rounded-2xl p-3 ring-1"
+                          style={{ backgroundColor: BRAND.greenLight, borderColor: BRAND.border }}
+                        >
+                          <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.green }}>
+                            Previous reply
+                          </p>
+                          <p className="mt-1 text-sm" style={{ color: BRAND.slate }}>
+                            {reply.reply_text}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="mt-4">
+                    <textarea
+                      value={replyDrafts[ticket.id] || ""}
+                      onChange={(e) =>
+                        setReplyDrafts((prev) => ({
+                          ...prev,
+                          [ticket.id]: e.target.value,
+                        }))
+                      }
+                      rows={4}
+                      placeholder="Write your reply..."
+                      className="w-full rounded-2xl border px-4 py-3 text-sm outline-none"
+                      style={{ borderColor: BRAND.border }}
+                    />
+
+                    <button
+                      onClick={() => handleReply(ticket.id)}
+                      disabled={savingReplyId === ticket.id}
+                      className="mt-3 rounded-2xl px-4 py-3 text-sm font-bold"
+                      style={{
+                        backgroundColor: BRAND.navy,
+                        color: BRAND.white,
+                        opacity: savingReplyId === ticket.id ? 0.7 : 1,
+                      }}
+                    >
+                      {savingReplyId === ticket.id ? "Sending..." : "Send reply and archive"}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-        </section>
+        </CollapsibleSection>
 
-        <section className="mt-6 rounded-[32px] bg-white p-6 ring-1" style={{ borderColor: BRAND.border }}>
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
-                Community moderation
-              </p>
-              <h2 className="mt-1 text-2xl font-black">Posts</h2>
-            </div>
+        <CollapsibleSection
+          title="Archived Ask Francis tickets"
+          subtitle="Search old replies and previously handled support threads."
+          isOpen={openSections.archive}
+          onToggle={() => toggleSection("archive")}
+          right={
+            <input
+              value={archiveSearch}
+              onChange={(e) => setArchiveSearch(e.target.value)}
+              placeholder="Search archive..."
+              className="w-full rounded-2xl border px-4 py-3 text-sm outline-none lg:max-w-sm"
+              style={{ borderColor: BRAND.border }}
+            />
+          }
+        >
+          <div className="space-y-4">
+            {archivedTickets.length === 0 ? (
+              <EmptyCard text="No archived tickets found." />
+            ) : (
+              archivedTickets.map((ticket) => (
+                <div
+                  key={ticket.id}
+                  className="rounded-[24px] p-5 ring-1"
+                  style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className="rounded-full px-3 py-1 text-xs font-black"
+                      style={{ backgroundColor: BRAND.greenLight, color: BRAND.green }}
+                    >
+                      Archived
+                    </span>
+                    <span className="text-xs" style={{ color: BRAND.slate }}>
+                      {new Date(ticket.created_at).toLocaleString()}
+                    </span>
+                  </div>
 
+                  <h3 className="mt-3 text-xl font-black">{ticket.subject}</h3>
+                  <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
+                    {ticket.message}
+                  </p>
+
+                  {ticket.replies.length > 0 && (
+                    <div className="mt-4 space-y-3">
+                      {ticket.replies.map((reply) => (
+                        <div
+                          key={reply.id}
+                          className="rounded-2xl p-3 ring-1"
+                          style={{ backgroundColor: BRAND.greenLight, borderColor: BRAND.border }}
+                        >
+                          <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.green }}>
+                            Reply
+                          </p>
+                          <p className="mt-1 text-sm" style={{ color: BRAND.slate }}>
+                            {reply.reply_text}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Community moderation"
+          subtitle="Search posts, review replies and likes, and hide or restore posts."
+          isOpen={openSections.community}
+          onToggle={() => toggleSection("community")}
+          right={
             <input
               value={communitySearch}
               onChange={(e) => setCommunitySearch(e.target.value)}
-              placeholder="Search community posts"
-              className="rounded-2xl border px-4 py-3 text-sm outline-none"
+              placeholder="Search community posts..."
+              className="w-full rounded-2xl border px-4 py-3 text-sm outline-none lg:max-w-sm"
               style={{ borderColor: BRAND.border }}
             />
-          </div>
-
-          <div className="mt-6 space-y-4">
-            {filteredCommunityPosts.map((post) => (
-              <div
-                key={post.id}
-                className="rounded-[28px] p-5 ring-1"
-                style={{
-                  backgroundColor: post.is_hidden ? BRAND.redLight : BRAND.white,
-                  borderColor: BRAND.border,
-                }}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className="rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.18em]"
-                        style={{ backgroundColor: BRAND.yellowLight, color: BRAND.navy }}
-                      >
-                        {post.tag}
-                      </span>
-                      {post.is_hidden ? (
+          }
+        >
+          <div className="space-y-4">
+            {filteredCommunityPosts.length === 0 ? (
+              <EmptyCard text="No community posts found." />
+            ) : (
+              filteredCommunityPosts.map((post) => (
+                <div
+                  key={post.id}
+                  className="rounded-[24px] p-5 ring-1"
+                  style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}
+                >
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
                         <span
                           className="rounded-full px-3 py-1 text-xs font-black"
-                          style={{ backgroundColor: BRAND.redLight, color: BRAND.red, border: `1px solid ${BRAND.border}` }}
+                          style={{
+                            backgroundColor: post.is_hidden ? BRAND.redLight : BRAND.yellowLight,
+                            color: post.is_hidden ? BRAND.red : BRAND.navy,
+                          }}
                         >
-                          Hidden
+                          {post.is_hidden ? "Hidden" : post.tag || "General"}
                         </span>
-                      ) : null}
+                        <span className="text-xs" style={{ color: BRAND.slate }}>
+                          by {post.author_name || "Learner"} · {new Date(post.created_at).toLocaleString()}
+                        </span>
+                      </div>
+
+                      <h3 className="mt-3 text-xl font-black">{post.subject}</h3>
+                      <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
+                        {post.body}
+                      </p>
+
+                      <p className="mt-3 text-xs" style={{ color: BRAND.slate }}>
+                        {post.likesCount} likes · {post.replies.length} replies
+                      </p>
                     </div>
-                    <h3 className="mt-3 text-xl font-black">{post.subject}</h3>
-                    <p className="mt-1 text-sm" style={{ color: BRAND.slate }}>
-                      by {post.author_name} · {new Date(post.created_at).toLocaleString()}
-                    </p>
+
+                    <button
+                      onClick={() => toggleCommunityHidden(post)}
+                      disabled={hideBusyId === post.id}
+                      className="rounded-2xl px-4 py-3 text-sm font-bold"
+                      style={{
+                        backgroundColor: post.is_hidden ? BRAND.green : BRAND.red,
+                        color: BRAND.white,
+                        opacity: hideBusyId === post.id ? 0.7 : 1,
+                      }}
+                    >
+                      {hideBusyId === post.id
+                        ? "Saving..."
+                        : post.is_hidden
+                        ? "Restore post"
+                        : "Hide post"}
+                    </button>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => toggleHidden(post)}
-                      className="rounded-2xl px-4 py-3 text-sm font-bold"
-                      style={{ backgroundColor: BRAND.blueLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
-                    >
-                      {post.is_hidden ? "Unhide" : "Hide"}
-                    </button>
-                    <button
-                      onClick={() => deletePost(post.id)}
-                      className="rounded-2xl px-4 py-3 text-sm font-bold"
-                      style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  {post.replies.length > 0 && (
+                    <div className="mt-4 space-y-3">
+                      {post.replies.map((reply) => (
+                        <div
+                          key={reply.id}
+                          className="rounded-2xl p-3 ring-1"
+                          style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}
+                        >
+                          <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.navy }}>
+                            {reply.author_name || "Learner"}
+                          </p>
+                          <p className="mt-1 text-sm" style={{ color: BRAND.slate }}>
+                            {reply.body}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-
-                <p className="mt-4 text-sm leading-6" style={{ color: BRAND.slate }}>
-                  {post.body}
-                </p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-        </section>
+        </CollapsibleSection>
 
-        <section className="mt-6 rounded-[32px] bg-white p-6 ring-1" style={{ borderColor: BRAND.border }}>
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
-                Users
-              </p>
-              <h2 className="mt-1 text-2xl font-black">All users</h2>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
+        <CollapsibleSection
+          title="Users"
+          subtitle="Search users, sort them, and control admin access."
+          isOpen={openSections.users}
+          onToggle={() => toggleSection("users")}
+          right={
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[280px,220px]">
               <input
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
-                placeholder="Search users"
+                placeholder="Search users..."
                 className="rounded-2xl border px-4 py-3 text-sm outline-none"
                 style={{ borderColor: BRAND.border }}
               />
@@ -587,51 +688,125 @@ if (!me) {
               >
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>
-                <option value="name-asc">Name A-Z</option>
-                <option value="name-desc">Name Z-A</option>
+                <option value="name-az">Name A-Z</option>
+                <option value="name-za">Name Z-A</option>
               </select>
             </div>
-          </div>
-
-          <div className="mt-6 overflow-x-auto">
+          }
+        >
+          <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
                 <tr style={{ color: BRAND.navy }}>
-                  <th className="pb-3 pr-4 font-black">Name</th>
-                  <th className="pb-3 pr-4 font-black">Email</th>
-                  <th className="pb-3 pr-4 font-black">Transmission</th>
-                  <th className="pb-3 pr-4 font-black">Admin</th>
-                  <th className="pb-3 pr-4 font-black">Joined</th>
+                  <th className="px-3 py-3 font-black">Name</th>
+                  <th className="px-3 py-3 font-black">Email</th>
+                  <th className="px-3 py-3 font-black">Transmission</th>
+                  <th className="px-3 py-3 font-black">Joined</th>
+                  <th className="px-3 py-3 font-black">Role</th>
+                  <th className="px-3 py-3 font-black">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="border-t" style={{ borderColor: BRAND.border }}>
-                    <td className="py-3 pr-4">{user.name || "—"}</td>
-                    <td className="py-3 pr-4">{user.email || "—"}</td>
-                    <td className="py-3 pr-4">{user.transmission || "—"}</td>
-                    <td className="py-3 pr-4">{user.is_admin ? "Yes" : "No"}</td>
-                    <td className="py-3 pr-4">{user.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}</td>
+                    <td className="px-3 py-3">{user.name || "—"}</td>
+                    <td className="px-3 py-3">{user.email || "—"}</td>
+                    <td className="px-3 py-3 capitalize">{user.transmission || "—"}</td>
+                    <td className="px-3 py-3">
+                      {user.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}
+                    </td>
+                    <td className="px-3 py-3">
+                      <span
+                        className="rounded-full px-3 py-1 text-xs font-black"
+                        style={{
+                          backgroundColor: user.is_admin ? BRAND.greenLight : BRAND.blueLight,
+                          color: user.is_admin ? BRAND.green : BRAND.navy,
+                        }}
+                      >
+                        {user.is_admin ? "Admin" : "User"}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <button
+                        onClick={() => toggleUserAdmin(user)}
+                        disabled={userAdminBusyId === user.id}
+                        className="rounded-2xl px-3 py-2 text-xs font-bold"
+                        style={{
+                          backgroundColor: BRAND.navy,
+                          color: BRAND.white,
+                          opacity: userAdminBusyId === user.id ? 0.7 : 1,
+                        }}
+                      >
+                        {userAdminBusyId === user.id
+                          ? "Saving..."
+                          : user.is_admin
+                          ? "Remove admin"
+                          : "Make admin"}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+
+            {filteredUsers.length === 0 && <div className="mt-4"><EmptyCard text="No users found." /></div>}
           </div>
-        </section>
+        </CollapsibleSection>
       </div>
     </div>
   );
 }
 
-function SummaryCard({ label, value }) {
+function CollapsibleSection({ title, subtitle, isOpen, onToggle, right, children }) {
   return (
-    <div className="rounded-[28px] bg-white p-5 ring-1" style={{ borderColor: BRAND.border }}>
-      <p className="text-sm font-black uppercase tracking-[0.2em]" style={{ color: BRAND.navy }}>
+    <section
+      className="rounded-[28px] bg-white p-6 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1"
+      style={{ borderColor: BRAND.border }}
+    >
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <button onClick={onToggle} className="text-left">
+          <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
+            {title}
+          </p>
+          <p className="mt-2 text-sm" style={{ color: BRAND.slate }}>
+            {subtitle}
+          </p>
+          <p className="mt-3 text-sm font-bold" style={{ color: BRAND.navy }}>
+            {isOpen ? "Hide section" : "Open section"}
+          </p>
+        </button>
+
+        {isOpen ? right : null}
+      </div>
+
+      {isOpen ? <div className="mt-5">{children}</div> : null}
+    </section>
+  );
+}
+
+function StatCard({ label, value }) {
+  return (
+    <div
+      className="rounded-[24px] bg-white p-5 shadow-[0_20px_60px_rgba(71,119,143,0.06)] ring-1"
+      style={{ borderColor: BRAND.border }}
+    >
+      <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.slate }}>
         {label}
       </p>
       <p className="mt-2 text-4xl font-black" style={{ color: BRAND.navy }}>
         {value}
       </p>
+    </div>
+  );
+}
+
+function EmptyCard({ text }) {
+  return (
+    <div
+      className="rounded-[24px] p-5 ring-1"
+      style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}
+    >
+      <p style={{ color: BRAND.slate }}>{text}</p>
     </div>
   );
 }
