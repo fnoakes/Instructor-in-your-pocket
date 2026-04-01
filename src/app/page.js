@@ -1146,19 +1146,14 @@ export default function App() {
 
       if (authMode === "signup") {
         const supabase = createClient();
-        const { error: profileError } = await supabase.from("profiles").upsert({
-          id: user.id,
-          name: profile.name,
-          email: profile.email,
-          transmission: profile.transmission,
-          subscription_status: "free",
-        });
-
-        if (profileError) {
-          console.error("PROFILE UPSERT ERROR:", profileError);
-          setAuthError("Account created, but profile save failed.");
-          return;
-        }
+      if (authMode === "signup") {
+  setPassword("");
+  setSignupSuccess(
+    "Account created. Check your email and confirm your address, then sign in."
+  );
+  setAuthMode("signin");
+  return;
+}
       }
 
       setPassword("");
