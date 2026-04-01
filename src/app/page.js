@@ -1992,12 +1992,14 @@ function LandingPage({
 
         <div className="rounded-[28px] bg-white p-5 ring-1 shadow-[0_20px_60px_rgba(71,119,143,0.06)] sm:p-6" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
-            Billing, terms & access
+            Trust, billing & contact
           </p>
           <div className="mt-4 space-y-3 text-sm leading-6" style={{ color: BRAND.slate }}>
-            <p><span className="font-bold" style={{ color: BRAND.navy }}>Billing:</span> subscriptions are handled securely through Stripe, and you can manage or cancel them any time from your account once subscribed.</p>
-            <p><span className="font-bold" style={{ color: BRAND.navy }}>Access:</span> free users can explore the app and watch the built-in video tips, while subscription unlocks the progress tracker, Ask Francis and the community.</p>
-            <p><span className="font-bold" style={{ color: BRAND.navy }}>Terms:</span> this is personal learner-driver access for using the app yourself, not something to be shared around like a family bag of crisps.</p>
+            <p><span className="font-bold" style={{ color: BRAND.navy }}>Privacy:</span> your account, saved progress and support messages stay tied to your profile so you can pick things up across devices.</p>
+            <p><span className="font-bold" style={{ color: BRAND.navy }}>Billing:</span> subscriptions are handled securely through Stripe, and you can manage or cancel from inside the app once subscribed.</p>
+            <p><span className="font-bold" style={{ color: BRAND.navy }}>Refunds:</span> if something billing-related looks wrong, contact support and we’ll sort it properly rather than leaving you chasing your tail.</p>
+            <p><span className="font-bold" style={{ color: BRAND.navy }}>Terms:</span> by using the app you’re signing up to use it for personal learner-driver support, not to share paid access around like a family bag of crisps.</p>
+            <p><span className="font-bold" style={{ color: BRAND.navy }}>Contact:</span> {SUPPORT_EMAIL}</p>
           </div>
         </div>
       </section>
@@ -2019,6 +2021,7 @@ function FeaturePill({ text }) {
     </div>
   );
 }
+
 
 function Header({ page, setPage, saveState, profile, signOut, hasSubscription, startCheckout, openBilling }) {
   const navItems = [
@@ -2068,123 +2071,148 @@ function Header({ page, setPage, saveState, profile, signOut, hasSubscription, s
 
   return (
     <header
-      className="mb-4 rounded-[28px] border bg-white/95 px-4 py-4 shadow-[0_16px_50px_rgba(71,119,143,0.10)] backdrop-blur sm:mb-5 sm:px-5 sm:py-5"
+      className="mb-4 rounded-[24px] border bg-white/95 shadow-[0_10px_40px_rgba(71,119,143,0.10)] sm:mb-6 sm:rounded-[28px]"
       style={{ borderColor: BRAND.border }}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div
-            className="inline-flex items-center gap-3 rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.22em]"
-            style={{
-              backgroundColor: BRAND.blueLight,
-              color: BRAND.navy,
-              border: `1px solid ${BRAND.border}`,
-            }}
-          >
-            <img src={LOGO_URL} alt="Driving School TV logo" className="h-8 w-8 rounded-full" />
-            <span className="whitespace-nowrap">Driving School TV</span>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-end gap-2 pl-2">
-          <div
-            className="rounded-full px-3 py-1.5 text-[11px] font-bold sm:text-xs"
-            style={{
-              backgroundColor: hasSubscription ? BRAND.greenLight : BRAND.slate,
-              color: hasSubscription ? BRAND.green : BRAND.white,
-              border: `1px solid ${BRAND.border}`,
-            }}
-          >
-            {hasSubscription ? "Subscriber" : "Not subscribed"}
-          </div>
-          <button
-            className="rounded-full px-3 py-1.5 text-[11px] font-bold sm:text-xs"
-            style={{
-              backgroundColor: BRAND.white,
-              color: BRAND.navy,
-              border: `1px solid ${BRAND.border}`,
-            }}
-            onClick={() => setPage("account")}
-          >
-            Account
-          </button>
-          <button
-            className="rounded-full px-3 py-1.5 text-[11px] font-bold sm:text-xs"
-            style={{
-              backgroundColor: BRAND.white,
-              color: BRAND.navy,
-              border: `1px solid ${BRAND.border}`,
-            }}
-            onClick={signOut}
-          >
-            Sign out
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-5">
-        <h1 className="text-[2rem] font-black leading-none tracking-tight sm:text-[2.45rem]" style={{ color: BRAND.navy }}>
-          Instructor In Your Pocket
-        </h1>
-        <p className="mt-2 text-sm sm:text-base" style={{ color: BRAND.slate }}>
-          Hello {profile?.name || "learner"}
-        </p>
-      </div>
-
-      <nav className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
-        {navItems.map((item) => {
-          const active = page === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setPage(item.id)}
-              className="group rounded-[26px] p-3 text-left transition duration-150 hover:-translate-y-[1px]"
+      <div className="px-4 py-4 sm:px-5 sm:py-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <div
+              className="inline-flex max-w-full items-center gap-3 rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.22em] sm:text-xs"
               style={{
-                backgroundColor: active ? BRAND.navy : BRAND.white,
-                color: active ? BRAND.white : BRAND.navy,
+                backgroundColor: BRAND.blueLight,
+                color: BRAND.navy,
                 border: `1px solid ${BRAND.border}`,
-                boxShadow: active
-                  ? "0 16px 40px rgba(71,119,143,0.22)"
-                  : "0 10px 26px rgba(71,119,143,0.08)",
               }}
             >
-              <div
-                className="overflow-hidden rounded-[22px]"
+              <img src={LOGO_URL} alt="Driving School TV logo" className="h-8 w-8 rounded-full shrink-0" />
+              <span className="truncate">Driving School TV</span>
+            </div>
+
+            <h1 className="mt-4 max-w-[12ch] text-[2rem] leading-[0.95] font-black tracking-tight sm:max-w-none sm:text-[2.35rem]" style={{ color: BRAND.navy }}>
+              Instructor In Your Pocket
+            </h1>
+            <p className="mt-2 text-sm sm:text-base" style={{ color: BRAND.slate }}>
+              Hello {profile.name || "learner"}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+            <div
+              className="rounded-full px-3 py-1.5 text-[11px] font-semibold sm:text-xs"
+              style={{
+                backgroundColor: hasSubscription ? BRAND.greenLight : BRAND.slate,
+                color: hasSubscription ? BRAND.green : BRAND.white,
+                border: `1px solid ${BRAND.border}`,
+              }}
+            >
+              {hasSubscription ? "Subscriber" : "Not subscribed"}
+            </div>
+
+            <button
+              onClick={() => setPage("account")}
+              className="rounded-full px-3 py-1.5 text-[11px] font-bold sm:text-xs"
+              style={{
+                backgroundColor: BRAND.white,
+                color: BRAND.navy,
+                border: `1px solid ${BRAND.border}`,
+              }}
+            >
+              Account
+            </button>
+
+            <button
+              onClick={signOut}
+              className="rounded-full px-3 py-1.5 text-[11px] font-bold sm:text-xs"
+              style={{
+                backgroundColor: BRAND.white,
+                color: BRAND.navy,
+                border: `1px solid ${BRAND.border}`,
+              }}
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3">
+          {navItems.map((item) => {
+            const active = page === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setPage(item.id)}
+                className="group rounded-[28px] p-3 text-left transition sm:p-4"
                 style={{
-                  backgroundColor: active ? "rgba(255,255,255,0.12)" : item.tint,
-                  border: `1px solid ${active ? 'rgba(255,255,255,0.08)' : BRAND.border}`,
+                  backgroundColor: active ? BRAND.navy : BRAND.white,
+                  color: active ? BRAND.white : BRAND.navy,
+                  border: `1px solid ${BRAND.border}`,
+                  boxShadow: active
+                    ? "0 18px 40px rgba(71,119,143,0.20)"
+                    : "0 12px 28px rgba(71,119,143,0.08)",
                 }}
               >
-                <div className="flex items-center gap-3 p-3 sm:p-4">
-                  <img
-                    src={item.image}
-                    alt={item.label}
-                    className="h-16 w-16 rounded-[18px] object-cover shadow-[0_8px_18px_rgba(71,119,143,0.12)] sm:h-20 sm:w-20"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-base font-black leading-tight sm:text-[1.1rem]">{item.label}</p>
-                    <p
-                      className="mt-1 text-xs leading-5 sm:text-sm"
-                      style={{ color: active ? 'rgba(255,255,255,0.88)' : BRAND.slate }}
-                    >
-                      {item.subtitle}
-                    </p>
-                  </div>
+                <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
                   <div
-                    className="hidden h-9 w-9 items-center justify-center rounded-full sm:flex"
+                    className="mb-2 h-16 w-16 overflow-hidden rounded-[22px] ring-1 sm:mb-3 sm:h-20 sm:w-20"
                     style={{
-                      backgroundColor: active ? "rgba(255,255,255,0.12)" : BRAND.blueLight,
-                      color: active ? BRAND.white : BRAND.navy,
+                      borderColor: BRAND.border,
+                      backgroundColor: BRAND.blueLight,
+                      boxShadow: "0 10px 24px rgba(71,119,143,0.12)",
                     }}
                   >
-                    <span className="text-lg leading-none">›</span>
+                    <img
+                      src={item.image}
+                      alt={item.label}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+
+                  <p className="text-sm font-black leading-tight sm:hidden">
+                    {item.mobileLabel}
+                  </p>
+
+                  <div className="hidden sm:block">
+                    <p className="text-lg font-black leading-tight">{item.label}</p>
+                    <p
+                      className="mt-1 text-sm leading-5"
+                      style={{ color: active ? "rgba(255,255,255,0.86)" : BRAND.slate }}
+                    >
+                      {item.description}
+                    </p>
                   </div>
                 </div>
-              </div>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-3 hidden sm:flex items-center justify-end gap-2">
+          <div
+            className="rounded-full px-3 py-1 text-xs font-semibold"
+            style={{ backgroundColor: BRAND.blueLight, color: BRAND.slate }}
+          >
+            {saveState}
+          </div>
+          {hasSubscription ? (
+            <button
+              onClick={openBilling}
+              className="rounded-full px-3 py-1 text-xs font-bold"
+              style={{ backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
+            >
+              Manage billing
             </button>
-          );
-        })}
-      </nav>
+          ) : (
+            <button
+              onClick={startCheckout}
+              className="rounded-full px-3 py-1 text-xs font-bold"
+              style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
+            >
+              Upgrade
+            </button>
+          )}
+        </div>
+      </div>
     </header>
   );
 }
@@ -2258,7 +2286,7 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
             <TransmissionToggle transmission={profile.transmission} compact />
           </div>
 
-          <div className="mt-4 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div className="mt-4">
             <div>
               <h2 className="text-4xl font-black tracking-tight sm:text-7xl" style={{ color: BRAND.navy }}>
                 {scoring.score}%
@@ -2266,20 +2294,6 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
               <p className="mt-2 text-2xl font-black">{scoring.title}</p>
               <p className="mt-3 max-w-xl text-sm leading-6 sm:text-base" style={{ color: BRAND.slate }}>
                 {scoring.message}
-              </p>
-            </div>
-
-            <div
-              className="rounded-[22px] p-4 shadow-sm backdrop-blur ring-1 sm:rounded-[28px] sm:p-5"
-              style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}
-            >
-              <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.slate }}>
-                Subscriber snapshot
-              </p>
-              <p className="mt-2 max-w-[260px] text-sm leading-6" style={{ color: BRAND.slate }}>
-                {hasSubscription
-                  ? "You’ve unlocked the full app, which means your progress tracker, Ask Francis replies and community access all work properly across devices."
-                  : "You’re on the free account right now. You can browse the app and watch the built-in video tips, but the full tracker, Ask Francis and community unlock with subscription."}
               </p>
             </div>
           </div>
@@ -2295,7 +2309,7 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
           </div>
         </div>
 
-        <div className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+        <div className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
             Pass insights
           </p>
@@ -2404,7 +2418,7 @@ function ProgressTrackerPage({
         />
       )}
 
-      <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+      <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
@@ -2479,7 +2493,7 @@ function ProgressTrackerPage({
                 <div className="p-4 sm:p-6" style={{ borderTop: `1px solid ${BRAND.border}` }}>
                   <div className="space-y-4">
                     {section.modules.map((module) => (
-                      <div key={module.title} className="rounded-[22px] p-3 ring-1 sm:rounded-[28px] sm:p-4" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
+                      <div key={module.title} className="rounded-[22px] p-4 ring-1 sm:rounded-[28px] sm:p-5" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
                         <h4 className="text-lg font-black" style={{ color: BRAND.navy }}>
                           {module.title}
                         </h4>
@@ -2602,7 +2616,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
       )}
 
       <div className="grid gap-4 xl:gap-6 xl:grid-cols-[1fr,1fr]">
-        <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+        <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
             Submit a question
           </p>
@@ -2626,7 +2640,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
                 value={newTicket.message}
                 disabled={!hasSubscription}
                 onChange={(e) => setNewTicket((prev) => ({ ...prev, message: e.target.value }))}
-                rows={3}
+                rows={4}
                 placeholder={hasSubscription ? "Explain what happened, what you’re worried about, and what you want help with." : "Upgrade to use Ask Francis"}
                 className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 disabled:opacity-60"
                 style={{ borderColor: BRAND.border }}
@@ -2639,7 +2653,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
                 value={newTicket.links}
                 disabled={!hasSubscription}
                 onChange={(e) => setNewTicket((prev) => ({ ...prev, links: e.target.value }))}
-                rows={1}
+                rows={2}
                 placeholder={hasSubscription ? "Paste YouTube or social media links here if they help illustrate your question." : "Upgrade to send links"}
                 className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 disabled:opacity-60"
                 style={{ borderColor: BRAND.border }}
@@ -2660,7 +2674,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
         </section>
 
         <section>
-          <div className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+          <div className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
@@ -2681,7 +2695,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
             ) : (
               <div className="mt-4 space-y-4">
                 {tickets.map((ticket) => (
-                  <div key={ticket.id} className="rounded-[22px] p-3 ring-1 sm:rounded-[28px] sm:p-4" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
+                  <div key={ticket.id} className="rounded-[22px] p-4 ring-1 sm:rounded-[28px] sm:p-5" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <h3 className="text-lg font-black">{ticket.subject}</h3>
@@ -2780,7 +2794,7 @@ function AccountPage({
       </section>
 
       <div className="grid gap-4 xl:gap-6 xl:grid-cols-[1fr,1fr]">
-        <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+        <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
             Your account details
           </p>
@@ -2856,7 +2870,7 @@ function AccountPage({
           )}
         </section>
 
-        <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+        <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
             Billing, trust & support
           </p>
@@ -2964,7 +2978,7 @@ function ResourcesPage({ tipVideoIndices, learnVideoIndices, rerollTips, rerollL
 
 function PlaylistSection({ title, copy, playlistId, indices, onRefresh, buttonText }) {
   return (
-    <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+    <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
@@ -3036,7 +3050,7 @@ function TestCentresPage({ centreSearch, setCentreSearch, centreVideos, refreshC
         </p>
       </section>
 
-      <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+      <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex-1">
             <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>
@@ -3124,7 +3138,7 @@ function CommunityPage({
 }) {
   return (
     <div className="grid gap-4 xl:gap-6 xl:grid-cols-[0.95fr,1.05fr]">
-      <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+      <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
         <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
           Community
         </p>
@@ -3193,7 +3207,7 @@ function CommunityPage({
               value={newPost.body}
               disabled={!hasSubscription}
               onChange={(e) => setNewPost((prev) => ({ ...prev, body: e.target.value }))}
-              rows={3}
+              rows={4}
               placeholder={hasSubscription ? "What’s happened? What are you stuck on? What are you overthinking?" : "Upgrade to use community"}
               className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 disabled:opacity-60"
               style={{ borderColor: BRAND.border }}
@@ -3227,7 +3241,7 @@ function CommunityPage({
           </div>
         ) : (
           posts.map((post) => (
-            <article key={post.id} className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.06)] ring-1 sm:rounded-[32px] sm:p-4" style={{ borderColor: BRAND.border }}>
+            <article key={post.id} className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.06)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
               <div className="flex items-center justify-between gap-3">
                 <span className="rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.2em]" style={{ backgroundColor: BRAND.yellowLight, color: BRAND.navy }}>
                   {post.tag}
@@ -3282,7 +3296,7 @@ function CommunityPage({
                 <textarea
                   value={replyDrafts[post.id] || ""}
                   onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [post.id]: e.target.value }))}
-                  rows={1}
+                  rows={2}
                   placeholder="Write a reply..."
                   className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none"
                   style={{ borderColor: BRAND.border }}
