@@ -2242,19 +2242,7 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
               </p>
             </div>
 
-            <div
-              className="rounded-[22px] p-4 shadow-sm backdrop-blur ring-1 sm:rounded-[28px] sm:p-5"
-              style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}
-            >
-              <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.slate }}>
-                Subscriber snapshot
-              </p>
-              <p className="mt-2 max-w-[260px] text-sm leading-6" style={{ color: BRAND.slate }}>
-                {hasSubscription
-                  ? "You’ve unlocked the full app, which means your progress tracker, Ask Francis replies and community access all work properly across devices."
-                  : "You’re on the free account right now. You can browse the app and watch the built-in video tips, but the full tracker, Ask Francis and community unlock with subscription."}
-              </p>
-            </div>
+          
           </div>
 
           <div className="mt-6">
