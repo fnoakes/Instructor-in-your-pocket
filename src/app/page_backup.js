@@ -46,7 +46,6 @@ const FRANCIS_PHOTO_URL =
   "https://static.wixstatic.com/media/18cc8c_0ec5f02424654bfd8d472c39e8629393~mv2.jpeg/v1/crop/x_0,y_0,w_3689,h_4000/fill/w_862,h_934,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/francis_JPEG.jpeg";
 const TIPS_PLAYLIST_ID = "PLWV7lt2OClXJD_ud1evtxh42kQzdvSID3";
 const LEARN_PLAYLIST_ID = "PLWV7lt2OClXK8QHGz-Lxup6IXA0udWkjy";
-const SUPPORT_EMAIL = "support@drivingschooltv.com";
 
 const TEST_CENTRE_VIDEOS = [
   { centre: "Abergavenny", url: "https://youtu.be/roZxui9s6io" },
@@ -512,7 +511,7 @@ function statusFromScore(score, zeroCount, completedCount, totalVisibleSkills) {
     return {
       title: "Nearly there",
       message:
-        "Loads is already in place. Finish off the untouched sections and you’ll build a much stronger all-round understanding before test day.",
+        "Loads is already in place. Finish off the untouched bits and you’ll have a much stronger all-round picture.",
     };
   }
 
@@ -520,104 +519,6 @@ function statusFromScore(score, zeroCount, completedCount, totalVisibleSkills) {
     title: "Flying now",
     message:
       "This is looking seriously strong. Keep it consistent and don’t let silly mistakes creep in.",
-  };
-}
-
-
-
-function pickInsightItem(items, seed) {
-  if (!items || items.length === 0) return null;
-  const safeSeed = Math.abs(Math.floor(seed * 1000)) || 1;
-  return items[safeSeed % items.length];
-}
-
-function insightHeadline(item, fallback) {
-  if (!item) return fallback;
-  if (item.section && item.section !== item.skill) return item.section;
-  return item.skill || fallback;
-}
-
-function getNeedWorkReason(item) {
-  const section = (item?.section || item?.skill || "").toLowerCase();
-
-  if (section.includes("junction")) {
-    return "Polishing this up matters because junction work is one of the biggest foundations in everyday driving. It shows whether you can judge gaps calmly, control the car properly, and make safe decisions without getting rushed.";
-  }
-  if (section.includes("observation") || section.includes("mirror") || section.includes("planning")) {
-    return "This deserves attention because good driving starts long before the car changes speed or direction. Strong observation and planning stop little problems becoming panicky last-second decisions.";
-  }
-  if (section.includes("roundabout") || section.includes("traffic light")) {
-    return "This is worth tightening because these are the moments where timing, positioning and confidence all get tested at once. When this area feels cleaner, the rest of the drive starts to feel far more controlled.";
-  }
-  if (section.includes("manoeuvre")) {
-    return "It’s worth sharpening this because slow-speed control exposes how comfortable you really are with the car. When this is tidy, your overall confidence usually rises everywhere else too.";
-  }
-  if (section.includes("hazard") || section.includes("pedestrian") || section.includes("road user")) {
-    return "This needs some love because safe driving is really about reading risk early and reacting smoothly. Getting better here makes the whole drive feel calmer and far less reactive.";
-  }
-  if (section.includes("road position") || section.includes("general road use") || section.includes("speed")) {
-    return "This is a strong one to focus on because it affects almost every minute you spend behind the wheel. Better positioning and pace make you look calmer, safer and much more test ready.";
-  }
-  if (section.includes("hill") || section.includes("faster roads") || section.includes("dual carriageway")) {
-    return "This matters because faster roads magnify hesitation and poor planning very quickly. Getting confident here makes the rest of your driving feel far more grown up and deliberate.";
-  }
-  if (section.includes("independent") || section.includes("test day") || section.includes("examiner")) {
-    return "This is worth building because it’s the part that decides whether your driving stands up once the prompts disappear. The more settled this feels, the more test ready you’ll actually be.";
-  }
-  if (section.includes("mock")) {
-    return "This is worth working on because mock-test performance is where neat little theory meets reality. Improving it gives you a far more honest picture of how ready you are when the pressure is on.";
-  }
-
-  return "This is worth focusing on because it feeds into the bigger picture of calm, independent driving. The cleaner this gets, the easier everything else tends to feel.";
-}
-
-function getDoingWellReason(item) {
-  const section = (item?.section || item?.skill || "").toLowerCase();
-
-  if (section.includes("junction")) {
-    return "This is a brilliant area to be doing well in because strong junction work shows real decision-making, not just car control. Keep it solid and it will support almost every drive you do.";
-  }
-  if (section.includes("observation") || section.includes("mirror") || section.includes("planning")) {
-    return "This is a proper strength because good observation makes everything else easier. When you’re reading the road early, you buy yourself time, space and much calmer decisions.";
-  }
-  if (section.includes("roundabout") || section.includes("traffic light")) {
-    return "This is a big win because these situations ask a lot from you all at once. If you’re handling this well, it usually means your timing and awareness are moving in the right direction.";
-  }
-  if (section.includes("manoeuvre")) {
-    return "This is worth being pleased with because neat low-speed control says a lot about your comfort with the car. It’s one of those strengths that quietly boosts confidence everywhere else.";
-  }
-  if (section.includes("hazard") || section.includes("pedestrian") || section.includes("road user")) {
-    return "This is a strong sign because it shows you’re seeing the road as a moving picture rather than just reacting to what’s directly in front of you. That’s exactly the kind of progress that leads to safer, calmer driving.";
-  }
-  if (section.includes("road position") || section.includes("general road use") || section.includes("speed")) {
-    return "This is a lovely strength to have because it affects the whole feel of your driving. When this area is solid, you look more settled, more natural and much more convincing on the road.";
-  }
-  if (section.includes("hill") || section.includes("faster roads") || section.includes("dual carriageway")) {
-    return "This is a very useful one to be doing well in because confidence at higher speed usually means your planning is improving too. Keep that up and ordinary roads start to feel much easier by comparison.";
-  }
-  if (section.includes("independent") || section.includes("test day") || section.includes("examiner")) {
-    return "This is a big positive because it suggests you’re starting to trust your own driving rather than waiting to be guided through it. That kind of independence is exactly what the test is looking for.";
-  }
-  if (section.includes("mock")) {
-    return "This is a strong sign because mock tests are where confidence, concentration and consistency all meet. Doing well here usually means your real readiness is starting to catch up with your lessons.";
-  }
-
-  return "This is a genuine strength because it’s helping your driving feel more settled and repeatable. Keep it consistent and it will lift the quality of the rest of your drive too.";
-}
-
-function buildDashboardInsights(scoring, seed) {
-  const needItem = pickInsightItem(scoring.riskSkills, seed);
-  const strongItem = pickInsightItem(scoring.strengthSkills, seed + 0.417);
-
-  return {
-    needWork: {
-      heading: insightHeadline(needItem, "Your foundations"),
-      body: getNeedWorkReason(needItem),
-    },
-    doingWell: {
-      heading: insightHeadline(strongItem, "Your recent progress"),
-      body: getDoingWellReason(strongItem),
-    },
   };
 }
 
@@ -790,12 +691,6 @@ export default function App() {
   const [authMode, setAuthMode] = useState("signin");
   const [saveState, setSaveState] = useState("Saved");
   const [password, setPassword] = useState("");
-  const [accountName, setAccountName] = useState("");
-  const [accountPassword, setAccountPassword] = useState("");
-  const [accountNotice, setAccountNotice] = useState("");
-  const [accountError, setAccountError] = useState("");
-  const [accountLoading, setAccountLoading] = useState(false);
-  const [dashboardInsightSeed, setDashboardInsightSeed] = useState(() => Math.random());
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [expandedSections, setExpandedSections] = useState(() => {
@@ -977,7 +872,7 @@ export default function App() {
 
       const profileRow = await loadProfileRow(supabase, user);
 
-      const hydratedProfile = {
+      setProfile({
         userId: user.id,
         name: profileRow?.name || "",
         email: profileRow?.email || user.email || "",
@@ -985,12 +880,7 @@ export default function App() {
         isSignedIn: true,
         authProvider: "supabase",
         subscription_status: profileRow?.subscription_status || "free",
-      };
-
-      setProfile(hydratedProfile);
-      setAccountName(hydratedProfile.name || "");
-      setAccountNotice("");
-      setAccountError("");
+      });
 
       const { data: progressRows, error: progressError } = await supabase
         .from("progress")
@@ -1058,20 +948,9 @@ export default function App() {
     }
   }, [profile.isSignedIn, page, hasSubscription]);
 
-  useEffect(() => {
-    if (page === "dashboard") {
-      setDashboardInsightSeed(Math.random());
-    }
-  }, [page]);
-
   const scoring = useMemo(
     () => calculateScoring(ratings, profile.transmission || "manual"),
     [ratings, profile.transmission]
-  );
-
-  const dashboardInsights = useMemo(
-    () => buildDashboardInsights(scoring, dashboardInsightSeed),
-    [scoring, dashboardInsightSeed]
   );
 
   const filteredSections = useMemo(() => {
@@ -1193,10 +1072,6 @@ export default function App() {
     setNewTicket({ subject: "", message: "", links: "" });
     setReplyDrafts({});
     setSaveState("Saved");
-    setAccountName("");
-    setAccountPassword("");
-    setAccountNotice("");
-    setAccountError("");
   }
 
   useEffect(() => {
@@ -1303,67 +1178,6 @@ export default function App() {
   function clearRatingFilters() {
     if (!hasSubscription) return;
     setSelectedRatings([]);
-  }
-
-  async function updateDisplayName(e) {
-    e.preventDefault();
-    if (!profile.userId || !accountName.trim()) return;
-
-    try {
-      setAccountLoading(true);
-      setAccountNotice("");
-      setAccountError("");
-      const supabase = createClient();
-
-      const { error } = await supabase
-        .from("profiles")
-        .update({ name: accountName.trim() })
-        .eq("id", profile.userId);
-
-      if (error) {
-        console.error("ACCOUNT NAME UPDATE ERROR:", error);
-        setAccountError("Couldn’t update your display name just now.");
-        return;
-      }
-
-      setProfile((prev) => ({ ...prev, name: accountName.trim() }));
-      setAccountNotice("Display name updated.");
-    } catch (error) {
-      console.error(error);
-      setAccountError("Couldn’t update your display name just now.");
-    } finally {
-      setAccountLoading(false);
-    }
-  }
-
-  async function updateAccountPassword(e) {
-    e.preventDefault();
-    if (!accountPassword.trim()) return;
-
-    try {
-      setAccountLoading(true);
-      setAccountNotice("");
-      setAccountError("");
-
-      const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({
-        password: accountPassword.trim(),
-      });
-
-      if (error) {
-        console.error("ACCOUNT PASSWORD UPDATE ERROR:", error);
-        setAccountError(error.message || "Couldn’t change your password just now.");
-        return;
-      }
-
-      setAccountPassword("");
-      setAccountNotice("Password updated.");
-    } catch (error) {
-      console.error(error);
-      setAccountError("Couldn’t change your password just now.");
-    } finally {
-      setAccountLoading(false);
-    }
   }
 
   async function submitPost(e) {
@@ -1622,8 +1436,6 @@ export default function App() {
               profile={profile}
               signOut={signOut}
               hasSubscription={hasSubscription}
-              startCheckout={startCheckout}
-              openBilling={openBilling}
             />
 
             {page === "dashboard" && (
@@ -1633,7 +1445,6 @@ export default function App() {
                 hasSubscription={hasSubscription}
                 startCheckout={startCheckout}
                 openBilling={openBilling}
-                dashboardInsights={dashboardInsights}
               />
             )}
 
@@ -1681,25 +1492,6 @@ export default function App() {
                 toggleLike={toggleLike}
                 hasSubscription={hasSubscription}
                 startCheckout={startCheckout}
-              />
-            )}
-
-            {page === "account" && (
-              <AccountPage
-                profile={profile}
-                hasSubscription={hasSubscription}
-                openBilling={openBilling}
-                startCheckout={startCheckout}
-                accountName={accountName}
-                setAccountName={setAccountName}
-                updateDisplayName={updateDisplayName}
-                accountPassword={accountPassword}
-                setAccountPassword={setAccountPassword}
-                updateAccountPassword={updateAccountPassword}
-                accountNotice={accountNotice}
-                accountError={accountError}
-                accountLoading={accountLoading}
-                signOut={signOut}
               />
             )}
 
@@ -1768,238 +1560,182 @@ function LandingPage({
   authLoading,
 }) {
   return (
-    <div className="space-y-5 sm:space-y-6">
-      <div className="grid min-h-[72vh] items-start gap-5 lg:items-center lg:gap-8 lg:grid-cols-[1.1fr,0.9fr]">
-        <section
-          className="rounded-[28px] p-5 shadow-[0_20px_70px_rgba(71,119,143,0.08)] sm:rounded-[36px] sm:p-8"
+    <div className="grid min-h-[88vh] items-start gap-5 lg:items-center lg:gap-8 lg:grid-cols-[1.05fr,0.95fr]">
+      <section
+        className="rounded-[28px] p-5 shadow-[0_20px_70px_rgba(71,119,143,0.08)] sm:rounded-[36px] sm:p-8"
+        style={{
+          background: `linear-gradient(135deg, ${BRAND.white} 0%, ${BRAND.blueLight} 60%, ${BRAND.yellowLight} 100%)`,
+          border: `1px solid ${BRAND.border}`,
+        }}
+      >
+        <div
+          className="inline-flex items-center gap-3 rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.28em]"
           style={{
-            background: `linear-gradient(135deg, ${BRAND.white} 0%, ${BRAND.blueLight} 60%, ${BRAND.yellowLight} 100%)`,
+            backgroundColor: BRAND.white,
+            color: BRAND.navy,
             border: `1px solid ${BRAND.border}`,
           }}
         >
-          <div
-            className="inline-flex items-center gap-3 rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.28em]"
-            style={{
-              backgroundColor: BRAND.white,
-              color: BRAND.navy,
-              border: `1px solid ${BRAND.border}`,
-            }}
+          <img src={LOGO_URL} alt="Driving School TV logo" className="h-7 w-7 rounded-full" />
+          <span>Driving School TV</span>
+        </div>
+
+        <h1 className="mt-4 text-3xl font-black tracking-tight sm:mt-5 sm:text-6xl" style={{ color: BRAND.navy }}>
+          Instructor In Your Pocket
+        </h1>
+
+        <p className="mt-5 max-w-2xl text-base leading-8" style={{ color: BRAND.slate }}>
+          Track your driving properly, see how you’re getting on, ask me questions directly, and stop guessing whether you’re actually test ready.
+        </p>
+
+        <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-3">
+          <FeaturePill text="Pass likelihood score" />
+          <FeaturePill text="Ask Francis access" />
+          <FeaturePill text="Video tips built in" />
+        </div>
+      </section>
+
+      <section
+        className="rounded-[28px] bg-white p-5 shadow-[0_20px_70px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[36px] sm:p-8"
+        style={{ borderColor: BRAND.border }}
+      >
+        <div className="mb-5 grid grid-cols-2 gap-2 sm:flex">
+          <button
+            onClick={() => setAuthMode("signin")}
+            className="rounded-2xl px-3 py-2 text-sm font-bold sm:px-4"
+            style={
+              authMode === "signin"
+                ? { backgroundColor: BRAND.navy, color: BRAND.white }
+                : { backgroundColor: BRAND.blueLight, color: BRAND.navy }
+            }
           >
-            <img src={LOGO_URL} alt="Driving School TV logo" className="h-7 w-7 rounded-full" />
-            <span>Driving School TV</span>
-          </div>
+            Sign in
+          </button>
+          <button
+            onClick={() => setAuthMode("signup")}
+            className="rounded-2xl px-3 py-2 text-sm font-bold sm:px-4"
+            style={
+              authMode === "signup"
+                ? { backgroundColor: BRAND.navy, color: BRAND.white }
+                : { backgroundColor: BRAND.blueLight, color: BRAND.navy }
+            }
+          >
+            Create profile
+          </button>
+        </div>
 
-          <h1 className="mt-4 text-3xl font-black tracking-tight sm:mt-5 sm:text-6xl" style={{ color: BRAND.navy }}>
-            Instructor In Your Pocket
-          </h1>
+        <h2 className="text-3xl font-black" style={{ color: BRAND.navy }}>
+          {authMode === "signin" ? "Welcome back" : "Create your learner profile"}
+        </h2>
 
-          <p className="mt-5 max-w-2xl text-base leading-8" style={{ color: BRAND.slate }}>
-            Stop guessing where you’re at. Track your real driving progress, see whether you’re actually getting test ready, unlock the full progress tracker, ask me questions directly, and get everything saved across your devices.
-          </p>
+        <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
+          Create a proper account so your progress and Ask Francis questions save across devices.
+        </p>
 
-          <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-3">
-            <FeaturePill text="Pass Likelihood Score" />
-            <FeaturePill text="Ask Francis Access" />
-            <FeaturePill text="Video Tips Built In" />
-          </div>
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-[22px] bg-white p-4 ring-1" style={{ borderColor: BRAND.border }}>
-              <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.navy }}>
-                What you get free
-              </p>
-              <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
-                You can sign up, look around the app, watch the built-in video tips, and see exactly how everything works before spending a penny.
-              </p>
-            </div>
-            <div className="rounded-[22px] bg-white p-4 ring-1" style={{ borderColor: BRAND.border }}>
-              <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.navy }}>
-                What unlocks with subscription
-              </p>
-              <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
-                The full progress tracker, your saved pass-likelihood profile, Ask Francis replies, and the subscriber-only community.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section
-          className="rounded-[28px] bg-white p-5 shadow-[0_20px_70px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[36px] sm:p-8"
-          style={{ borderColor: BRAND.border }}
-        >
-          <div className="mb-5 grid grid-cols-2 gap-2 sm:flex">
-            <button
-              onClick={() => setAuthMode("signin")}
-              className="rounded-2xl px-3 py-2 text-sm font-bold sm:px-4"
-              style={
-                authMode === "signin"
-                  ? { backgroundColor: BRAND.navy, color: BRAND.white }
-                  : { backgroundColor: BRAND.blueLight, color: BRAND.navy }
-              }
-            >
-              Sign in
-            </button>
-            <button
-              onClick={() => setAuthMode("signup")}
-              className="rounded-2xl px-3 py-2 text-sm font-bold sm:px-4"
-              style={
-                authMode === "signup"
-                  ? { backgroundColor: BRAND.navy, color: BRAND.white }
-                  : { backgroundColor: BRAND.blueLight, color: BRAND.navy }
-              }
-            >
-              Create profile
-            </button>
-          </div>
-
-          <h2 className="text-3xl font-black" style={{ color: BRAND.navy }}>
-            {authMode === "signin" ? "Welcome back" : "Create your learner profile"}
-          </h2>
-
-          <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
-            {authMode === "signin"
-              ? "Sign in to pick up where you left off, access your saved progress, and unlock subscriber features if you’ve already joined."
-              : "Create an account so your progress and Ask Francis questions can be saved across devices."}
-          </p>
-
-          <form onSubmit={onSubmit} className="mt-5 space-y-4 sm:mt-6">
-            {authMode === "signup" && (
-              <div>
-                <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>
-                  Name
-                </label>
-                <input
-                  value={profile.name}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder="Francis"
-                  className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none"
-                  style={{ borderColor: BRAND.border }}
-                />
-              </div>
-            )}
-
+        <form onSubmit={onSubmit} className="mt-5 space-y-4 sm:mt-6">
+          {authMode === "signup" && (
             <div>
               <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>
-                Email
+                Name
               </label>
               <input
-                value={profile.email}
-                onChange={(e) => setProfile((prev) => ({ ...prev, email: e.target.value }))}
-                placeholder="you@example.com"
+                value={profile.name}
+                onChange={(e) => setProfile((prev) => ({ ...prev, name: e.target.value }))}
+                placeholder="Francis"
                 className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none"
                 style={{ borderColor: BRAND.border }}
               />
             </div>
+          )}
 
+          <div>
+            <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>
+              Email
+            </label>
+            <input
+              value={profile.email}
+              onChange={(e) => setProfile((prev) => ({ ...prev, email: e.target.value }))}
+              placeholder="you@example.com"
+              className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none"
+              style={{ borderColor: BRAND.border }}
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={authMode === "signin" ? "Enter your password" : "Choose a password"}
+              className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none"
+              style={{ borderColor: BRAND.border }}
+            />
+          </div>
+
+          {authMode === "signup" && (
             <div>
               <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>
-                Password
+                Transmission
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={authMode === "signin" ? "Enter your password" : "Choose a password"}
-                className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none"
-                style={{ borderColor: BRAND.border }}
-              />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {[
+                  { id: "manual", label: "Manual" },
+                  { id: "automatic", label: "Automatic" },
+                ].map((item) => {
+                  const selected = profile.transmission === item.id;
+                  return (
+                    <button
+                      type="button"
+                      key={item.id}
+                      onClick={() => setProfile((prev) => ({ ...prev, transmission: item.id }))}
+                      className="rounded-2xl px-4 py-3 text-sm font-bold"
+                      style={
+                        selected
+                          ? { backgroundColor: BRAND.navy, color: BRAND.white }
+                          : {
+                              backgroundColor: BRAND.blueLight,
+                              color: BRAND.navy,
+                              border: `1px solid ${BRAND.border}`,
+                            }
+                      }
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+          )}
 
-            {authMode === "signup" && (
-              <div>
-                <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>
-                  Transmission
-                </label>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {[
-                    { id: "manual", label: "Manual" },
-                    { id: "automatic", label: "Automatic" },
-                  ].map((item) => {
-                    const selected = profile.transmission === item.id;
-                    return (
-                      <button
-                        type="button"
-                        key={item.id}
-                        onClick={() => setProfile((prev) => ({ ...prev, transmission: item.id }))}
-                        className="rounded-2xl px-4 py-3 text-sm font-bold"
-                        style={
-                          selected
-                            ? { backgroundColor: BRAND.navy, color: BRAND.white }
-                            : {
-                                backgroundColor: BRAND.blueLight,
-                                color: BRAND.navy,
-                                border: `1px solid ${BRAND.border}`,
-                              }
-                        }
-                      >
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {authError ? (
-              <div
-                className="rounded-2xl px-4 py-3 text-sm"
-                style={{
-                  backgroundColor: BRAND.redLight,
-                  color: BRAND.red,
-                  border: `1px solid ${BRAND.border}`,
-                }}
-              >
-                {authError}
-              </div>
-            ) : null}
-
-            <button
-              type="submit"
-              disabled={authLoading}
-              className="w-full rounded-2xl px-4 py-3 text-sm font-bold"
+          {authError ? (
+            <div
+              className="rounded-2xl px-4 py-3 text-sm"
               style={{
-                backgroundColor: BRAND.navy,
-                color: BRAND.white,
-                opacity: authLoading ? 0.7 : 1,
+                backgroundColor: BRAND.redLight,
+                color: BRAND.red,
+                border: `1px solid ${BRAND.border}`,
               }}
             >
-              {authLoading ? "Please wait..." : authMode === "signin" ? "Sign in" : "Create profile"}
-            </button>
-          </form>
-        </section>
-      </div>
-
-      <section className="grid gap-4 lg:grid-cols-[1.1fr,0.9fr]">
-        <div className="rounded-[28px] bg-white p-5 ring-1 shadow-[0_20px_60px_rgba(71,119,143,0.06)] sm:p-6" style={{ borderColor: BRAND.border }}>
-          <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
-            Why it’s worth paying
-          </p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-[22px] p-4 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
-              <h3 className="text-lg font-black" style={{ color: BRAND.navy }}>A proper progress tracker</h3>
-              <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
-                Not just a vague feeling of how lessons are going. You get a clear picture of what’s improving, what still needs work, and where your real test readiness is coming from.
-              </p>
+              {authError}
             </div>
-            <div className="rounded-[22px] p-4 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
-              <h3 className="text-lg font-black" style={{ color: BRAND.navy }}>Direct support from me</h3>
-              <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
-                Ask Francis is there for the questions that keep going round your head after lessons. Real replies, real context, and no guessing whether you’re overthinking it.
-              </p>
-            </div>
-          </div>
-        </div>
+          ) : null}
 
-        <div className="rounded-[28px] bg-white p-5 ring-1 shadow-[0_20px_60px_rgba(71,119,143,0.06)] sm:p-6" style={{ borderColor: BRAND.border }}>
-          <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
-            Billing, terms & access
-          </p>
-          <div className="mt-4 space-y-3 text-sm leading-6" style={{ color: BRAND.slate }}>
-            <p><span className="font-bold" style={{ color: BRAND.navy }}>Billing:</span> subscriptions are handled securely through Stripe, and you can manage or cancel them any time from your account once subscribed.</p>
-            <p><span className="font-bold" style={{ color: BRAND.navy }}>Access:</span> free users can explore the app and watch the built-in video tips, while subscription unlocks the progress tracker, Ask Francis and the community.</p>
-            <p><span className="font-bold" style={{ color: BRAND.navy }}>Terms:</span> this is personal learner-driver access for using the app yourself, not something to be shared around like a family bag of crisps.</p>
-          </div>
-        </div>
+          <button
+            type="submit"
+            disabled={authLoading}
+            className="w-full rounded-2xl px-4 py-3 text-sm font-bold"
+            style={{
+              backgroundColor: BRAND.navy,
+              color: BRAND.white,
+              opacity: authLoading ? 0.7 : 1,
+            }}
+          >
+            {authLoading ? "Please wait..." : authMode === "signin" ? "Sign in" : "Create profile"}
+          </button>
+        </form>
       </section>
     </div>
   );
@@ -2020,7 +1756,7 @@ function FeaturePill({ text }) {
   );
 }
 
-function Header({ page, setPage, saveState, profile, signOut, hasSubscription, startCheckout, openBilling }) {
+function Header({ page, setPage, saveState, profile, signOut, hasSubscription }) {
   const navItems = [
     { id: "dashboard", label: "Dashboard" },
     { id: "progress tracker", label: "Progress Tracker" },
@@ -2032,11 +1768,11 @@ function Header({ page, setPage, saveState, profile, signOut, hasSubscription, s
 
   return (
     <header
-      className="mb-4 rounded-[24px] border bg-white/95 backdrop-blur shadow-[0_10px_40px_rgba(71,119,143,0.10)] sm:mb-5 sm:rounded-[28px]"
+      className="mb-4 rounded-[24px] border bg-white/95 backdrop-blur shadow-[0_10px_40px_rgba(71,119,143,0.10)] sm:mb-6 sm:rounded-[28px]"
       style={{ borderColor: BRAND.border }}
     >
-      <div className="flex flex-col gap-3 px-4 py-4 sm:px-5 sm:py-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex items-start justify-between gap-3 lg:min-w-0">
+      <div className="flex flex-col gap-4 px-4 py-4 sm:px-5 sm:py-5 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex items-start justify-between gap-3">
           <div>
             <div
               className="mb-2 inline-flex items-center gap-3 rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.25em]"
@@ -2049,7 +1785,7 @@ function Header({ page, setPage, saveState, profile, signOut, hasSubscription, s
               <img src={LOGO_URL} alt="Driving School TV logo" className="h-8 w-8 rounded-full" />
               <span>Driving School TV</span>
             </div>
-            <h1 className="text-[2.05rem] leading-none font-black tracking-tight sm:text-[2.35rem] md:text-[2.8rem]" style={{ color: BRAND.navy }}>
+            <h1 className="text-xl font-black tracking-tight sm:text-3xl" style={{ color: BRAND.navy }}>
               Instructor In Your Pocket
             </h1>
             <p className="mt-1 text-sm sm:text-base" style={{ color: BRAND.slate }}>
@@ -2057,41 +1793,28 @@ function Header({ page, setPage, saveState, profile, signOut, hasSubscription, s
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              className="rounded-full px-2.5 py-1 text-[11px] font-bold"
-              style={{
-                backgroundColor: BRAND.yellowLight,
-                color: BRAND.navy,
-                border: `1px solid ${BRAND.border}`,
-              }}
-              onClick={() => setPage("account")}
-            >
-              Account
-            </button>
-            <button
-              className="rounded-full px-2.5 py-1 text-[11px] font-bold"
-              style={{
-                backgroundColor: BRAND.yellowLight,
-                color: BRAND.navy,
-                border: `1px solid ${BRAND.border}`,
-              }}
-              onClick={signOut}
-            >
-              Sign out
-            </button>
-          </div>
+          <button
+            className="rounded-full px-2.5 py-1 text-[11px] font-bold shrink-0"
+            style={{
+              backgroundColor: BRAND.yellowLight,
+              color: BRAND.navy,
+              border: `1px solid ${BRAND.border}`,
+            }}
+            onClick={signOut}
+          >
+            Sign out
+          </button>
         </div>
 
-        <div className="flex flex-col gap-2 lg:items-end lg:flex-1 lg:min-w-0">
-          <nav className="flex flex-wrap gap-2 justify-start lg:justify-end">
+        <div className="flex flex-col gap-3 xl:items-end">
+          <nav className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             {navItems.map((item) => {
               const active = page === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => setPage(item.id)}
-                  className="rounded-2xl px-3.5 py-2 text-[0.95rem] font-bold transition whitespace-nowrap"
+                  className="rounded-2xl px-4 py-2 text-sm font-bold transition"
                   style={
                     active
                       ? { backgroundColor: BRAND.navy, color: BRAND.white }
@@ -2109,6 +1832,12 @@ function Header({ page, setPage, saveState, profile, signOut, hasSubscription, s
           </nav>
 
           <div className="flex flex-wrap items-center gap-2 justify-end">
+            <div
+              className="rounded-full px-3 py-1 text-xs font-semibold"
+              style={{ backgroundColor: BRAND.blueLight, color: BRAND.slate }}
+            >
+              {saveState}
+            </div>
             <div
               className="rounded-full px-3 py-1 text-xs font-semibold"
               style={{
@@ -2171,7 +1900,7 @@ function InsightCard({ title, item, tone }) {
   );
 }
 
-function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilling, dashboardInsights }) {
+function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilling }) {
   return (
     <div className="space-y-6">
       <section className="grid gap-4 lg:gap-6 lg:grid-cols-[1.15fr,0.85fr]">
@@ -2205,19 +1934,17 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
               </p>
             </div>
 
-            {!hasSubscription ? (
-              <div
-                className="rounded-[22px] p-4 shadow-sm backdrop-blur ring-1 sm:rounded-[28px] sm:p-5"
-                style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}
-              >
-                <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.slate }}>
-                  Subscriber snapshot
-                </p>
-                <p className="mt-2 max-w-[260px] text-sm leading-6" style={{ color: BRAND.slate }}>
-                  You’re on the free account right now. You can browse the app and watch the built-in video tips, but the full tracker, Ask Francis and community unlock with subscription.
-                </p>
-              </div>
-            ) : null}
+            <div
+              className="rounded-[22px] p-4 shadow-sm backdrop-blur ring-1 sm:rounded-[28px] sm:p-5"
+              style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}
+            >
+              <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.slate }}>
+                Just so you know...
+              </p>
+              <p className="mt-2 max-w-[240px] text-sm leading-6" style={{ color: BRAND.slate }}>
+                {scoring.message}
+              </p>
+            </div>
           </div>
 
           <div className="mt-6">
@@ -2231,7 +1958,7 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
           </div>
         </div>
 
-        <div className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+        <div className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
             Pass insights
           </p>
@@ -2243,39 +1970,44 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
               </p>
             </div>
           ) : (
-            <div className="mt-4 space-y-3">
-              <div className="rounded-3xl p-4 ring-1" style={{ backgroundColor: BRAND.redLight, borderColor: BRAND.border }}>
-                <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.red }}>
-                  Need to work on
-                </p>
-                <h3 className="mt-2 text-lg font-black">{dashboardInsights.needWork.heading}</h3>
-                <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
-                  {dashboardInsights.needWork.body}
-                </p>
-              </div>
-
-              <div className="rounded-3xl p-4 ring-1" style={{ backgroundColor: BRAND.greenLight, borderColor: BRAND.border }}>
-                <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.green }}>
-                  Doing well on
-                </p>
-                <h3 className="mt-2 text-lg font-black">{dashboardInsights.doingWell.heading}</h3>
-                <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
-                  {dashboardInsights.doingWell.body}
-                </p>
-              </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {scoring.riskSkills.map((item, index) => (
+                <InsightCard key={item.id} title={`Need to work on #${index + 1}`} item={item} tone="bad" />
+              ))}
+              {scoring.strengthSkills.map((item, index) => (
+                <InsightCard key={item.id} title={`Doing well #${index + 1}`} item={item} tone="good" />
+              ))}
             </div>
           )}
 
-          {!hasSubscription ? (
-            <div className="mt-5">
+          <div className="mt-5">
+            {!hasSubscription ? (
               <PaywallCard
-                title="See the app properly before you pay, then unlock the lot"
-                copy="Free lets you browse the app and use the built-in video library. Subscription unlocks your saved progress tracker, direct Ask Francis access, community posting and the full readiness view."
-                buttonText="Unlock subscriber access"
+                title="Unlock the full app"
+                copy="Upgrade to use Progress Tracker properly, ask Francis questions directly, and unlock the community."
                 onClick={startCheckout}
               />
-            </div>
-          ) : null}
+            ) : (
+              <div
+                className="rounded-3xl p-4 ring-1"
+                style={{ backgroundColor: BRAND.greenLight, borderColor: BRAND.border }}
+              >
+                <p className="text-sm font-black uppercase tracking-[0.18em]" style={{ color: BRAND.green }}>
+                  Subscription active
+                </p>
+                <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
+                  You’ve got full access. If you need to update payment details or manage your subscription, use the button below.
+                </p>
+                <button
+                  onClick={openBilling}
+                  className="mt-4 rounded-2xl px-4 py-3 text-sm font-bold"
+                  style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
+                >
+                  Manage subscription
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </section>
     </div>
@@ -2321,7 +2053,7 @@ function ProgressTrackerPage({
         />
       )}
 
-      <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+      <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
@@ -2396,7 +2128,7 @@ function ProgressTrackerPage({
                 <div className="p-4 sm:p-6" style={{ borderTop: `1px solid ${BRAND.border}` }}>
                   <div className="space-y-4">
                     {section.modules.map((module) => (
-                      <div key={module.title} className="rounded-[22px] p-3 ring-1 sm:rounded-[28px] sm:p-4" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
+                      <div key={module.title} className="rounded-[22px] p-4 ring-1 sm:rounded-[28px] sm:p-5" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
                         <h4 className="text-lg font-black" style={{ color: BRAND.navy }}>
                           {module.title}
                         </h4>
@@ -2498,7 +2230,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
             </h2>
             <div className="mt-4 rounded-[22px] bg-white p-4 ring-1 sm:rounded-[28px] sm:p-5" style={{ borderColor: BRAND.border }}>
               <p className="text-sm leading-7" style={{ color: BRAND.slate }}>
-                Ask me a question you need a driving instructor to answer. Yes, I’ll reply, not AI. If a video helps explain it, feel free to send YouTube or social media links. It may take me up to 24h to get back to you, thank you for your patience.
+                Ask me a question you need a driving instructor to answer. Yes, I’ll reply, not ai. If a video helps explain it, feel free to send YouTube or social media links, and give me up to 24 hours to get back to you.
               </p>
             </div>
           </div>
@@ -2511,15 +2243,14 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
 
       {!hasSubscription && (
         <PaywallCard
-          title="Ask Francis is part of subscriber access"
-          copy="Free lets you see how the feature works. Subscription lets you send questions, attach links for context, and receive replies directly under your ticket thread."
-          buttonText="Unlock Ask Francis"
+          title="Ask Francis is for subscribers"
+          copy="You can see what this section does, but sending questions and getting direct replies is part of the paid app."
           onClick={startCheckout}
         />
       )}
 
       <div className="grid gap-4 xl:gap-6 xl:grid-cols-[1fr,1fr]">
-        <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+        <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
             Submit a question
           </p>
@@ -2543,7 +2274,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
                 value={newTicket.message}
                 disabled={!hasSubscription}
                 onChange={(e) => setNewTicket((prev) => ({ ...prev, message: e.target.value }))}
-                rows={3}
+                rows={6}
                 placeholder={hasSubscription ? "Explain what happened, what you’re worried about, and what you want help with." : "Upgrade to use Ask Francis"}
                 className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 disabled:opacity-60"
                 style={{ borderColor: BRAND.border }}
@@ -2556,7 +2287,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
                 value={newTicket.links}
                 disabled={!hasSubscription}
                 onChange={(e) => setNewTicket((prev) => ({ ...prev, links: e.target.value }))}
-                rows={1}
+                rows={3}
                 placeholder={hasSubscription ? "Paste YouTube or social media links here if they help illustrate your question." : "Upgrade to send links"}
                 className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 disabled:opacity-60"
                 style={{ borderColor: BRAND.border }}
@@ -2564,20 +2295,24 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
             </div>
 
             <div className="rounded-2xl p-4 ring-1" style={{ backgroundColor: BRAND.yellowLight, borderColor: BRAND.border }}>
-              <p className="text-sm font-semibold" style={{ color: BRAND.navy }}>How it works</p>
+              <p className="text-sm font-semibold" style={{ color: BRAND.navy }}>Reply expectation</p>
               <p className="mt-1 text-sm leading-6" style={{ color: BRAND.slate }}>
-                Your question appears underneath like a support ticket, and replies stay there so you can come back to them later across devices.
+                It can take up to 24 hours for a reply. Your question will appear below like a support ticket, and replies will sit underneath once answered.
               </p>
             </div>
 
-            <button disabled={!hasSubscription} className="w-full sm:w-auto rounded-2xl px-4 py-3 text-sm font-bold disabled:opacity-60" style={{ backgroundColor: BRAND.navy, color: BRAND.white }}>
+            <button
+              disabled={!hasSubscription}
+              className="w-full sm:w-auto rounded-2xl px-4 py-3 text-sm font-bold disabled:opacity-60"
+              style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
+            >
               Submit question
             </button>
           </form>
         </section>
 
         <section>
-          <div className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+          <div className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
@@ -2598,7 +2333,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
             ) : (
               <div className="mt-4 space-y-4">
                 {tickets.map((ticket) => (
-                  <div key={ticket.id} className="rounded-[22px] p-3 ring-1 sm:rounded-[28px] sm:p-4" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
+                  <div key={ticket.id} className="rounded-[22px] p-4 ring-1 sm:rounded-[28px] sm:p-5" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <h3 className="text-lg font-black">{ticket.subject}</h3>
@@ -2628,7 +2363,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
                       </div>
                     )}
 
-                    <div className="mt-4 space-y-2.5">
+                    <div className="mt-4 space-y-3">
                       {ticket.replies.length === 0 ? (
                         <div className="rounded-2xl p-3 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
                           <p className="text-sm" style={{ color: BRAND.slate }}>
@@ -2641,7 +2376,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
                             <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.green }}>
                               Francis replied
                             </p>
-                            <p className="mt-1 text-sm leading-6" style={{ color: BRAND.slate }}>{reply.message}</p>
+                            <p className="mt-1 text-sm" style={{ color: BRAND.slate }}>{reply.message}</p>
                           </div>
                         ))
                       )}
@@ -2656,183 +2391,6 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
                 )}
               </div>
             )}
-          </div>
-        </section>
-      </div>
-    </div>
-  );
-}
-
-function AccountPage({
-  profile,
-  hasSubscription,
-  openBilling,
-  startCheckout,
-  accountName,
-  setAccountName,
-  updateDisplayName,
-  accountPassword,
-  setAccountPassword,
-  updateAccountPassword,
-  accountNotice,
-  accountError,
-  accountLoading,
-  signOut,
-}) {
-  return (
-    <div className="space-y-6">
-      <section
-        className="rounded-[24px] p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-8"
-        style={{ background: `linear-gradient(135deg, ${BRAND.white} 0%, ${BRAND.blueLight} 55%, ${BRAND.yellowLight} 100%)`, borderColor: BRAND.border }}
-      >
-        <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
-          Account
-        </p>
-        <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-5xl" style={{ color: BRAND.navy }}>
-          Manage your details properly
-        </h2>
-        <p className="mt-4 max-w-3xl text-sm leading-7 sm:text-base" style={{ color: BRAND.slate }}>
-          Check your account details, change your display name, update your password, manage your billing, and know exactly how your subscription works.
-        </p>
-      </section>
-
-      <div className="grid gap-4 xl:gap-6 xl:grid-cols-[1fr,1fr]">
-        <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
-          <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
-            Your account details
-          </p>
-
-          <div className="mt-4 space-y-3">
-            <div className="rounded-2xl p-4 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
-              <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.navy }}>Email</p>
-              <p className="mt-1 text-sm" style={{ color: BRAND.slate }}>{profile.email || "—"}</p>
-            </div>
-            <div className="rounded-2xl p-4 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
-              <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.navy }}>Transmission</p>
-              <p className="mt-1 text-sm capitalize" style={{ color: BRAND.slate }}>{profile.transmission || "manual"}</p>
-            </div>
-            <div className="rounded-2xl p-4 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
-              <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.navy }}>Plan</p>
-              <p className="mt-1 text-sm" style={{ color: BRAND.slate }}>{hasSubscription ? "Subscriber" : "Free account"}</p>
-            </div>
-          </div>
-
-          <form onSubmit={updateDisplayName} className="mt-5 space-y-3">
-            <div>
-              <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>Display name</label>
-              <input
-                value={accountName}
-                onChange={(e) => setAccountName(e.target.value)}
-                className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none"
-                style={{ borderColor: BRAND.border }}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={accountLoading}
-              className="rounded-2xl px-4 py-3 text-sm font-bold disabled:opacity-60"
-              style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
-            >
-              Update display name
-            </button>
-          </form>
-
-          <form onSubmit={updateAccountPassword} className="mt-5 space-y-3">
-            <div>
-              <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>Change password</label>
-              <input
-                type="password"
-                value={accountPassword}
-                onChange={(e) => setAccountPassword(e.target.value)}
-                placeholder="Enter a new password"
-                className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none"
-                style={{ borderColor: BRAND.border }}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={accountLoading}
-              className="rounded-2xl px-4 py-3 text-sm font-bold disabled:opacity-60"
-              style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
-            >
-              Update password
-            </button>
-          </form>
-
-          {(accountNotice || accountError) && (
-            <div
-              className="mt-5 rounded-2xl px-4 py-3 text-sm"
-              style={{
-                backgroundColor: accountError ? BRAND.redLight : BRAND.greenLight,
-                color: accountError ? BRAND.red : BRAND.green,
-                border: `1px solid ${BRAND.border}`,
-              }}
-            >
-              {accountError || accountNotice}
-            </div>
-          )}
-        </section>
-
-        <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
-          <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
-            Billing, trust & support
-          </p>
-
-          <div className="mt-4 space-y-3">
-            <div className="rounded-2xl p-4 ring-1" style={{ backgroundColor: BRAND.yellowLight, borderColor: BRAND.border }}>
-              <p className="text-sm font-semibold" style={{ color: BRAND.navy }}>Billing</p>
-              <p className="mt-1 text-sm leading-6" style={{ color: BRAND.slate }}>
-                {hasSubscription
-                  ? "Your subscription is handled securely through Stripe. You can manage payment details or cancel from the billing portal."
-                  : "You’re on the free account right now. Upgrade whenever you want full tracker access, Ask Francis, and the community."}
-              </p>
-            </div>
-            <div className="rounded-2xl p-4 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
-              <p className="text-sm font-semibold" style={{ color: BRAND.navy }}>Privacy policy</p>
-              <p className="mt-1 text-sm leading-6" style={{ color: BRAND.slate }}>
-                Your saved progress, account details and Ask Francis messages stay attached to your profile so you can use the app properly across devices.
-              </p>
-            </div>
-            <div className="rounded-2xl p-4 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
-              <p className="text-sm font-semibold" style={{ color: BRAND.navy }}>Terms</p>
-              <p className="mt-1 text-sm leading-6" style={{ color: BRAND.slate }}>
-                Subscription access is provided for the account holder and is subject to the app’s normal use terms. Access, features and billing settings are managed through your account.
-              </p>
-            </div>
-            <div className="rounded-2xl p-4 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
-              <p className="text-sm font-semibold" style={{ color: BRAND.navy }}>Refunds & contact</p>
-              <p className="mt-1 text-sm leading-6" style={{ color: BRAND.slate }}>
-                If something looks wrong with billing or access, contact {SUPPORT_EMAIL} and we’ll sort it properly.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-5 flex flex-wrap gap-3">
-            {hasSubscription ? (
-              <button
-                onClick={openBilling}
-                className="rounded-2xl px-4 py-3 text-sm font-bold"
-                style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
-              >
-                Manage subscription
-              </button>
-            ) : (
-              <button
-                onClick={startCheckout}
-                className="rounded-2xl px-4 py-3 text-sm font-bold"
-                style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
-              >
-                Upgrade now
-              </button>
-            )}
-
-            <button
-              onClick={signOut}
-              className="rounded-2xl px-4 py-3 text-sm font-bold"
-              style={{ backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
-            >
-              Sign out
-            </button>
           </div>
         </section>
       </div>
@@ -2881,7 +2439,7 @@ function ResourcesPage({ tipVideoIndices, learnVideoIndices, rerollTips, rerollL
 
 function PlaylistSection({ title, copy, playlistId, indices, onRefresh, buttonText }) {
   return (
-    <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+    <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
@@ -2953,7 +2511,7 @@ function TestCentresPage({ centreSearch, setCentreSearch, centreVideos, refreshC
         </p>
       </section>
 
-      <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+      <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex-1">
             <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>
@@ -3041,7 +2599,7 @@ function CommunityPage({
 }) {
   return (
     <div className="grid gap-4 xl:gap-6 xl:grid-cols-[0.95fr,1.05fr]">
-      <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+      <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
         <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
           Community
         </p>
@@ -3054,8 +2612,7 @@ function CommunityPage({
           <div className="mt-5">
             <PaywallCard
               title="Community is for subscribers"
-              copy="Free lets you see that the community exists. Subscription unlocks the actual posts, replies and likes so it becomes something you can really use."
-              buttonText="Unlock community"
+              copy="You can see that the community exists, but posts and interaction unlock with a subscription."
               onClick={startCheckout}
             />
           </div>
@@ -3110,7 +2667,7 @@ function CommunityPage({
               value={newPost.body}
               disabled={!hasSubscription}
               onChange={(e) => setNewPost((prev) => ({ ...prev, body: e.target.value }))}
-              rows={3}
+              rows={5}
               placeholder={hasSubscription ? "What’s happened? What are you stuck on? What are you overthinking?" : "Upgrade to use community"}
               className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 disabled:opacity-60"
               style={{ borderColor: BRAND.border }}
@@ -3144,7 +2701,7 @@ function CommunityPage({
           </div>
         ) : (
           posts.map((post) => (
-            <article key={post.id} className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.06)] ring-1 sm:rounded-[32px] sm:p-4" style={{ borderColor: BRAND.border }}>
+            <article key={post.id} className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.06)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
               <div className="flex items-center justify-between gap-3">
                 <span className="rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.2em]" style={{ backgroundColor: BRAND.yellowLight, color: BRAND.navy }}>
                   {post.tag}
@@ -3175,7 +2732,7 @@ function CommunityPage({
                 </span>
               </div>
 
-              <div className="mt-4 space-y-2.5">
+              <div className="mt-4 space-y-3">
                 {post.replies.map((reply) => (
                   <div
                     key={reply.id}
@@ -3185,7 +2742,7 @@ function CommunityPage({
                     <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: BRAND.navy }}>
                       {reply.author}
                     </p>
-                    <p className="mt-1 text-sm leading-6" style={{ color: BRAND.slate }}>
+                    <p className="mt-1 text-sm" style={{ color: BRAND.slate }}>
                       {reply.body}
                     </p>
                     <p className="mt-2 text-xs" style={{ color: BRAND.slate }}>
@@ -3199,7 +2756,7 @@ function CommunityPage({
                 <textarea
                   value={replyDrafts[post.id] || ""}
                   onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [post.id]: e.target.value }))}
-                  rows={1}
+                  rows={3}
                   placeholder="Write a reply..."
                   className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none"
                   style={{ borderColor: BRAND.border }}

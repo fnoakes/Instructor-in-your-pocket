@@ -1,81 +1,75 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+type Payload = {
+  toEmail: string;
+  toName?: string;
+  ticketSubject?: string;
+  replyText: string;
+  subject?: string;
+  appUrl?: string;
+};
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const APP_URL = Deno.env.get("APP_URL")!;
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Content-Type": "application/json",
+};
 
-Deno.serve(async (req) => {
+const resendApiKey = Deno.env.get("RESEND_API_KEY") ?? "";
+const appUrl = Deno.env.get("APP_URL") ?? "https://www.drivingschooltv.com";
+
+Deno.serve(async (req: Request): Promise<Response> => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   try {
-    const payload = await req.json();
-
-    const record = payload?.record;
-    if (!record?.ticket_id) {
+    if (req.method !== "POST") {
       return new Response(
-        JSON.stringify({ ok: true, skipped: "No ticket_id on payload" }),
-        { headers: { "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Method not allowed" }),
+        { status: 405, headers: corsHeaders }
       );
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-    const { data: ticket, error: ticketError } = await supabase
-      .from("ask_francis_tickets")
-      .select("id, subject, user_id")
-      .eq("id", record.ticket_id)
-      .single();
-
-    if (ticketError || !ticket) {
+    if (!resendApiKey) {
       return new Response(
-        JSON.stringify({
-          ok: false,
-          error: "Ticket lookup failed",
-          details: ticketError,
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: "Missing RESEND_API_KEY secret" }),
+        { status: 500, headers: corsHeaders }
       );
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("name, email")
-      .eq("id", ticket.user_id)
-      .maybeSingle();
+    const body = (await req.json()) as Payload;
 
-    if (profileError || !profile?.email) {
+    const toEmail = body.toEmail?.trim();
+    const toName = body.toName?.trim() || "there";
+    const ticketSubject =
+      body.ticketSubject?.trim() || "your Ask Francis question";
+    const replyText = body.replyText?.trim();
+    const emailSubject =
+      body.subject?.trim() || "Francis has replied to your Ask Francis question";
+    const safeAppUrl = body.appUrl?.trim() || appUrl;
+
+    if (!toEmail || !replyText) {
       return new Response(
-        JSON.stringify({
-          ok: false,
-          error: "Profile/email lookup failed",
-          details: profileError,
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: "Missing toEmail or replyText" }),
+        { status: 400, headers: corsHeaders }
       );
     }
 
     const html = `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
-        <h2>Your Ask Francis question has a reply</h2>
-        <p>Hi ${profile.name || "there"},</p>
-        <p>Francis has replied to your Ask Francis question:</p>
-        <p><strong>${ticket.subject || "Your question"}</strong></p>
-        <p>Log in to Instructor In Your Pocket to read the reply.</p>
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 640px; margin: 0 auto;">
+        <h2 style="margin-bottom: 12px;">Francis has replied to your Ask Francis question</h2>
+        <p>Hi ${toName},</p>
+        <p>There’s a reply waiting for you in Instructor In Your Pocket for:</p>
+        <p><strong>${ticketSubject}</strong></p>
+        <div style="margin: 20px 0; padding: 16px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px;">
+          ${replyText.replace(/\n/g, "<br />")}
+        </div>
+        <p>You can log in here to view the full thread:</p>
         <p>
-          <a
-            href="${APP_URL}"
-            style="display:inline-block;padding:12px 18px;background:#47778f;color:#ffffff;text-decoration:none;border-radius:12px;"
-          >
-            Open the app
+          <a href="${safeAppUrl}" style="display:inline-block;padding:12px 18px;background:#47778f;color:#ffffff;text-decoration:none;border-radius:10px;">
+            Open Instructor In Your Pocket
           </a>
-        </p>
-        <p style="margin-top:24px;color:#6b7280;font-size:14px;">
-          You’re getting this email because a reply was added to your Ask Francis ticket.
         </p>
       </div>
     `;
@@ -83,33 +77,41 @@ Deno.serve(async (req) => {
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
+        Authorization: `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Driving School TV <notifications@YOURDOMAIN.com>",
-        to: profile.email,
-        subject: "Francis replied to your Ask Francis question",
+        from: "Driving School TV <onboarding@resend.dev>",
+        to: [toEmail],
+        subject: emailSubject,
         html,
       }),
     });
 
-    const resendData = await resendResponse.json();
+    const resendText = await resendResponse.text();
 
-    return new Response(JSON.stringify({ ok: true, resendData }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
+    if (!resendResponse.ok) {
+      console.error("RESEND ERROR RAW:", resendText);
+
+      return new Response(
+        JSON.stringify({
+          error: `Resend returned ${resendResponse.status}: ${resendText}`,
+        }),
+        { status: 500, headers: corsHeaders }
+      );
+    }
+
     return new Response(
-      JSON.stringify({
-        ok: false,
-        error: error instanceof Error ? error.message : String(error),
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      JSON.stringify({ ok: true, data: resendText }),
+      { status: 200, headers: corsHeaders }
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("FUNCTION ERROR:", message);
+
+    return new Response(
+      JSON.stringify({ error: message }),
+      { status: 500, headers: corsHeaders }
     );
   }
 });

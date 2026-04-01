@@ -40,6 +40,7 @@ export default function AdminPage() {
   const [replyDrafts, setReplyDrafts] = useState({});
   const [savingReplyId, setSavingReplyId] = useState(null);
   const [hideBusyId, setHideBusyId] = useState(null);
+  const [deleteBusyId, setDeleteBusyId] = useState(null);
   const [userAdminBusyId, setUserAdminBusyId] = useState(null);
   const [userPaidBusyId, setUserPaidBusyId] = useState(null);
 
@@ -152,6 +153,17 @@ export default function AdminPage() {
       setSavingReplyId(ticketId);
       const supabase = createClient();
 
+      const { data: ticketData, error: ticketError } = await supabase
+        .from("ask_francis_tickets")
+        .select("id, subject, user_id")
+        .eq("id", ticketId)
+        .single();
+
+      if (ticketError || !ticketData) {
+        console.error("ADMIN TICKET LOOKUP ERROR:", ticketError);
+        return;
+      }
+
       const { error: replyError } = await supabase.from("ask_francis_replies").insert({
         ticket_id: ticketId,
         reply_text: replyText,
@@ -160,6 +172,49 @@ export default function AdminPage() {
       if (replyError) {
         console.error("ADMIN REPLY INSERT ERROR:", replyError);
         return;
+      }
+
+      try {
+        let recipientEmail = "";
+        let recipientName = "";
+
+        if (ticketData.user_id) {
+          const { data: recipientProfile } = await supabase
+            .from("profiles")
+            .select("email, name")
+            .eq("id", ticketData.user_id)
+            .maybeSingle();
+
+          recipientEmail = (recipientProfile?.email || "").trim();
+          recipientName = (recipientProfile?.name || "").trim();
+        }
+
+        const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail);
+
+        if (looksLikeEmail) {
+          const { error: emailError } = await supabase.functions.invoke("ask-francis-email", {
+            body: {
+              toEmail: recipientEmail,
+              toName: recipientName,
+              ticketSubject: ticketData.subject || "your Ask Francis question",
+              replyText,
+              appUrl: "https://www.drivingschooltv.com",
+              subject: "Francis has replied to your question",
+            },
+          });
+
+          if (emailError) {
+            console.warn("EMAIL SEND ERROR:", emailError);
+          }
+        } else {
+          console.warn("EMAIL SKIPPED - INVALID OR MISSING RECIPIENT EMAIL", {
+            ticketId,
+            userId: ticketData.user_id,
+            recipientEmail,
+          });
+        }
+      } catch (emailStepError) {
+        console.warn("EMAIL STEP FAILED:", emailStepError);
       }
 
       const { error: updateError } = await supabase
@@ -205,6 +260,49 @@ export default function AdminPage() {
       console.error(error);
     } finally {
       setHideBusyId(null);
+    }
+  }
+
+  async function deleteCommunityPost(post) {
+    try {
+      setDeleteBusyId(post.id);
+      const supabase = createClient();
+
+      const { error: repliesError } = await supabase
+        .from("community_replies")
+        .delete()
+        .eq("post_id", post.id);
+
+      if (repliesError) {
+        console.error("ADMIN COMMUNITY DELETE REPLIES ERROR:", repliesError);
+        return;
+      }
+
+      const { error: likesError } = await supabase
+        .from("community_likes")
+        .delete()
+        .eq("post_id", post.id);
+
+      if (likesError) {
+        console.error("ADMIN COMMUNITY DELETE LIKES ERROR:", likesError);
+        return;
+      }
+
+      const { error: postError } = await supabase
+        .from("community_posts")
+        .delete()
+        .eq("id", post.id);
+
+      if (postError) {
+        console.error("ADMIN COMMUNITY DELETE POST ERROR:", postError);
+        return;
+      }
+
+      await loadAdminDashboard();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setDeleteBusyId(null);
     }
   }
 
@@ -615,7 +713,7 @@ export default function AdminPage() {
 
         <CollapsibleSection
           title="Community moderation"
-          subtitle="Search posts, review replies and likes, and hide or restore posts."
+          subtitle="Search posts, review replies and likes, and hide, restore or permanently delete posts."
           isOpen={openSections.community}
           onToggle={() => toggleSection("community")}
           right={
@@ -665,22 +763,37 @@ export default function AdminPage() {
                       </p>
                     </div>
 
-                    <button
-                      onClick={() => toggleCommunityHidden(post)}
-                      disabled={hideBusyId === post.id}
-                      className="rounded-2xl px-4 py-3 text-sm font-bold"
-                      style={{
-                        backgroundColor: post.is_hidden ? BRAND.green : BRAND.red,
-                        color: BRAND.white,
-                        opacity: hideBusyId === post.id ? 0.7 : 1,
-                      }}
-                    >
-                      {hideBusyId === post.id
-                        ? "Saving..."
-                        : post.is_hidden
-                        ? "Restore post"
-                        : "Hide post"}
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => toggleCommunityHidden(post)}
+                        disabled={hideBusyId === post.id}
+                        className="rounded-2xl px-4 py-3 text-sm font-bold"
+                        style={{
+                          backgroundColor: post.is_hidden ? BRAND.green : BRAND.red,
+                          color: BRAND.white,
+                          opacity: hideBusyId === post.id ? 0.7 : 1,
+                        }}
+                      >
+                        {hideBusyId === post.id
+                          ? "Saving..."
+                          : post.is_hidden
+                          ? "Restore post"
+                          : "Hide post"}
+                      </button>
+
+                      <button
+                        onClick={() => deleteCommunityPost(post)}
+                        disabled={deleteBusyId === post.id}
+                        className="rounded-2xl px-4 py-3 text-sm font-bold"
+                        style={{
+                          backgroundColor: BRAND.navy,
+                          color: BRAND.white,
+                          opacity: deleteBusyId === post.id ? 0.7 : 1,
+                        }}
+                      >
+                        {deleteBusyId === post.id ? "Deleting..." : "Delete post"}
+                      </button>
+                    </div>
                   </div>
 
                   {post.replies.length > 0 && (

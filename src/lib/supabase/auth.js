@@ -1,8 +1,18 @@
 import { createClient } from "./client.js";
 
+const appUrl =
+  process.env.NEXT_PUBLIC_APP_URL || "https://www.drivingschooltv.com";
+
 export async function signUpWithEmail({ email, password }) {
   const supabase = createClient();
-  return supabase.auth.signUp({ email, password });
+
+  return supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: appUrl,
+    },
+  });
 }
 
 export async function signInWithEmail({ email, password }) {
