@@ -2058,9 +2058,9 @@ function Header({ page, setPage, saveState, profile, signOut, hasSubscription, s
             <div
               className="rounded-full px-3 py-1.5 text-xs font-semibold"
               style={{
-                backgroundColor: hasSubscription ? BRAND.greenLight : BRAND.yellowLight,
-                color: hasSubscription ? BRAND.green : BRAND.navy,
-                border: `1px solid ${BRAND.border}`,
+                backgroundColor: hasSubscription ? BRAND.greenLight : BRAND.slate,
+                color: hasSubscription ? BRAND.green : BRAND.white,
+                border: `px solid ${BRAND.border}`,
               }}
             >
               {hasSubscription ? "Subscriber" : "Not subscribed"}
@@ -2304,12 +2304,6 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
                 className="rounded-3xl p-4 ring-1"
                 style={{ backgroundColor: BRAND.greenLight, borderColor: BRAND.border }}
               >
-                <p className="text-sm font-black uppercase tracking-[0.18em]" style={{ color: BRAND.green }}>
-                  Subscription active
-                </p>
-                <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
-                  You’ve got full access. If you need to update payment details or manage your subscription, use the button below.
-                </p>
                 <button
                   onClick={openBilling}
                   className="mt-4 rounded-2xl px-4 py-3 text-sm font-bold"
