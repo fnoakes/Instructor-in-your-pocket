@@ -2079,12 +2079,12 @@ function Header({ page, setPage, saveState, profile, signOut, hasSubscription, s
             </div>
             {hasSubscription ? (
               <button
-                onClick={openBilling}
-                className="rounded-full px-3 py-1 text-xs font-bold"
-                style={{ backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
-              >
-                Account
-              </button>
+  onClick={() => setPage("account")}
+  className="rounded-full px-3 py-1 text-xs font-bold"
+  style={{ backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
+>
+  Account
+</button>
             ) : (
               <button
                 onClick={() => setPage("account")}
@@ -2309,33 +2309,16 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
             </div>
           )}
 
-          <div className="mt-5">
-            {!hasSubscription ? (
-              <PaywallCard
-                title="See the app properly before you pay, then unlock the lot"
-                copy="Free lets you browse the app and use the built-in video library. Subscription unlocks your saved progress tracker, direct Ask Francis access, community posting and the full readiness view."
-                buttonText="Unlock subscriber access"
-                onClick={startCheckout}
-              />
-            ) : (
-              <div
-                className="rounded-3xl p-4 ring-1"
-                style={{ backgroundColor: BRAND.greenLight, borderColor: BRAND.border }}
-              >
-                <p className="text-sm font-black uppercase tracking-[0.18em]" style={{ color: BRAND.green }}>
-                  Subscription active
-                </p>
-               
-                <button
-                  onClick={openBilling}
-                  className="mt-4 rounded-2xl px-4 py-3 text-sm font-bold"
-                  style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
-                >
-                  Manage subscription
-                </button>
-              </div>
-            )}
-          </div>
+       <div className="mt-5">
+  {!hasSubscription ? (
+    <PaywallCard
+      title="See the app properly before you pay, then unlock the lot"
+      copy="Free lets you browse the app and use the built-in video library. Subscription unlocks your saved progress tracker, direct Ask Francis access, community posting and the full readiness view."
+      buttonText="Unlock subscriber access"
+      onClick={startCheckout}
+    />
+  ) : null}
+</div>
         </div>
       </section>
     </div>
