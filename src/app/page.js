@@ -2022,6 +2022,7 @@ function FeaturePill({ text }) {
   );
 }
 
+
 function Header({ page, setPage, saveState, profile, signOut, hasSubscription, startCheckout, openBilling }) {
   const navItems = [
     { id: "dashboard", label: "Dashboard" },
@@ -2034,66 +2035,113 @@ function Header({ page, setPage, saveState, profile, signOut, hasSubscription, s
 
   return (
     <header
-      className="mb-4 rounded-[24px] border bg-white/95 backdrop-blur shadow-[0_10px_40px_rgba(71,119,143,0.10)] sm:mb-6 sm:rounded-[28px]"
+      className="mb-4 rounded-[24px] border bg-white/95 shadow-[0_10px_40px_rgba(71,119,143,0.10)] sm:mb-6 sm:rounded-[28px]"
       style={{ borderColor: BRAND.border }}
     >
       <div className="px-4 py-4 sm:px-5 sm:py-5">
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div
-              className="mb-2 inline-flex items-center gap-3 rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.25em]"
+              className="inline-flex max-w-full items-center gap-3 rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.2em]"
               style={{
                 backgroundColor: BRAND.blueLight,
                 color: BRAND.navy,
                 border: `1px solid ${BRAND.border}`,
               }}
             >
-              <img src={LOGO_URL} alt="Driving School TV logo" className="h-8 w-8 rounded-full" />
-              <span>Driving School TV</span>
+              <img src={LOGO_URL} alt="Driving School TV logo" className="h-8 w-8 rounded-full shrink-0" />
+              <span className="truncate">Driving School TV</span>
             </div>
-            <h1 className="text-[1.8rem] font-black tracking-tight sm:text-[2.3rem]" style={{ color: BRAND.navy }}>
-              Instructor In Your Pocket
-            </h1>
-            <p className="mt-1 text-sm sm:text-base" style={{ color: BRAND.slate }}>
-              Hello {profile?.name || "learner"}
-            </p>
           </div>
 
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <div className="hidden sm:flex items-center gap-2 shrink-0">
             <div
-              className="rounded-full px-3 py-1 text-xs font-semibold"
+              className="rounded-full px-3 py-1.5 text-xs font-semibold"
               style={{
                 backgroundColor: hasSubscription ? BRAND.greenLight : BRAND.yellowLight,
                 color: hasSubscription ? BRAND.green : BRAND.navy,
+                border: `1px solid ${BRAND.border}`,
               }}
             >
               {hasSubscription ? "Subscriber" : "Not subscribed"}
             </div>
             <button
               onClick={() => setPage("account")}
-              className="rounded-full px-3 py-1 text-xs font-bold"
-              style={{ backgroundColor: BRAND.yellowLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
+              className="rounded-full px-3 py-1.5 text-xs font-bold"
+              style={{
+                backgroundColor: BRAND.yellowLight,
+                color: BRAND.navy,
+                border: `1px solid ${BRAND.border}`,
+              }}
             >
               Account
             </button>
             <button
               onClick={signOut}
-              className="rounded-full px-3 py-1 text-xs font-bold"
-              style={{ backgroundColor: BRAND.yellowLight, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
+              className="rounded-full px-3 py-1.5 text-xs font-bold"
+              style={{
+                backgroundColor: BRAND.yellowLight,
+                color: BRAND.navy,
+                border: `1px solid ${BRAND.border}`,
+              }}
             >
               Sign out
             </button>
           </div>
         </div>
 
-        <nav className="mt-4 grid grid-cols-2 gap-2">
+        <div className="mt-4">
+          <h1 className="text-[1.95rem] font-black leading-none tracking-tight sm:text-[2.4rem]" style={{ color: BRAND.navy }}>
+            Instructor In Your Pocket
+          </h1>
+          <p className="mt-2 text-sm sm:text-base" style={{ color: BRAND.slate }}>
+            Hello {profile?.name || "learner"}
+          </p>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2 sm:hidden">
+          <div
+            className="rounded-full px-3 py-2 text-center text-xs font-semibold"
+            style={{
+              backgroundColor: hasSubscription ? BRAND.greenLight : BRAND.yellowLight,
+              color: hasSubscription ? BRAND.green : BRAND.navy,
+              border: `1px solid ${BRAND.border}`,
+            }}
+          >
+            {hasSubscription ? "Subscriber" : "Not subscribed"}
+          </div>
+          <button
+            onClick={() => setPage("account")}
+            className="rounded-full px-3 py-2 text-xs font-bold"
+            style={{
+              backgroundColor: BRAND.yellowLight,
+              color: BRAND.navy,
+              border: `1px solid ${BRAND.border}`,
+            }}
+          >
+            Account
+          </button>
+          <button
+            onClick={signOut}
+            className="rounded-full px-3 py-2 text-xs font-bold"
+            style={{
+              backgroundColor: BRAND.yellowLight,
+              color: BRAND.navy,
+              border: `1px solid ${BRAND.border}`,
+            }}
+          >
+            Sign out
+          </button>
+        </div>
+
+        <nav className="mt-4 grid grid-cols-2 gap-3 sm:mt-5 lg:grid-cols-3 xl:grid-cols-6">
           {navItems.map((item) => {
             const active = page === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => setPage(item.id)}
-                className="rounded-2xl px-4 py-3 text-sm font-bold transition"
+                className="min-h-[56px] rounded-[22px] px-4 py-3 text-sm font-bold leading-tight transition"
                 style={
                   active
                     ? { backgroundColor: BRAND.navy, color: BRAND.white }
@@ -2183,7 +2231,7 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
             <TransmissionToggle transmission={profile.transmission} compact />
           </div>
 
-          <div className="mt-4">
+          <div className="mt-4 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-4xl font-black tracking-tight sm:text-7xl" style={{ color: BRAND.navy }}>
                 {scoring.score}%
@@ -2191,6 +2239,20 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
               <p className="mt-2 text-2xl font-black">{scoring.title}</p>
               <p className="mt-3 max-w-xl text-sm leading-6 sm:text-base" style={{ color: BRAND.slate }}>
                 {scoring.message}
+              </p>
+            </div>
+
+            <div
+              className="rounded-[22px] p-4 shadow-sm backdrop-blur ring-1 sm:rounded-[28px] sm:p-5"
+              style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}
+            >
+              <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.slate }}>
+                Subscriber snapshot
+              </p>
+              <p className="mt-2 max-w-[260px] text-sm leading-6" style={{ color: BRAND.slate }}>
+                {hasSubscription
+                  ? "You’ve unlocked the full app, which means your progress tracker, Ask Francis replies and community access all work properly across devices."
+                  : "You’re on the free account right now. You can browse the app and watch the built-in video tips, but the full tracker, Ask Francis and community unlock with subscription."}
               </p>
             </div>
           </div>
