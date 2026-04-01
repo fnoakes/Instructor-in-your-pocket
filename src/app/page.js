@@ -1626,99 +1626,105 @@ export default function App() {
               openBilling={openBilling}
             />
 
-            {page === "dashboard" && (
-              <Dashboard
-                scoring={scoring}
-                profile={profile}
-                hasSubscription={hasSubscription}
-                startCheckout={startCheckout}
-                openBilling={openBilling}
-                dashboardInsights={dashboardInsights}
-              />
-            )}
+            <div className={page !== "dashboard" ? "pb-24 sm:pb-28" : ""}>
+              {page === "dashboard" && (
+                <Dashboard
+                  scoring={scoring}
+                  profile={profile}
+                  hasSubscription={hasSubscription}
+                  startCheckout={startCheckout}
+                  openBilling={openBilling}
+                  dashboardInsights={dashboardInsights}
+                />
+              )}
 
-            {page === "progress tracker" && (
-              <ProgressTrackerPage
-                search={search}
-                setSearch={setSearch}
-                selectedRatings={selectedRatings}
-                toggleRatingFilter={toggleRatingFilter}
-                clearRatingFilters={clearRatingFilters}
-                scoring={scoring}
-                ratings={ratings}
-                updateRating={updateRating}
-                sections={filteredSections}
-                expandedSections={expandedSections}
-                toggleSection={toggleSection}
-                transmission={profile.transmission}
-                hasSubscription={hasSubscription}
-                startCheckout={startCheckout}
-              />
-            )}
+              {page === "progress tracker" && (
+                <ProgressTrackerPage
+                  search={search}
+                  setSearch={setSearch}
+                  selectedRatings={selectedRatings}
+                  toggleRatingFilter={toggleRatingFilter}
+                  clearRatingFilters={clearRatingFilters}
+                  scoring={scoring}
+                  ratings={ratings}
+                  updateRating={updateRating}
+                  sections={filteredSections}
+                  expandedSections={expandedSections}
+                  toggleSection={toggleSection}
+                  transmission={profile.transmission}
+                  hasSubscription={hasSubscription}
+                  startCheckout={startCheckout}
+                />
+              )}
 
-            {page === "ask" && (
-              <AskFrancisPage
-                tickets={tickets}
-                newTicket={newTicket}
-                setNewTicket={setNewTicket}
-                submitTicket={submitTicket}
-                hasSubscription={hasSubscription}
-                startCheckout={startCheckout}
-              />
-            )}
+              {page === "ask" && (
+                <AskFrancisPage
+                  tickets={tickets}
+                  newTicket={newTicket}
+                  setNewTicket={setNewTicket}
+                  submitTicket={submitTicket}
+                  hasSubscription={hasSubscription}
+                  startCheckout={startCheckout}
+                />
+              )}
 
-            {page === "community" && (
-              <CommunityPage
-                profile={profile}
-                posts={communityPosts}
-                loading={communityLoading}
-                newPost={newPost}
-                setNewPost={setNewPost}
-                submitPost={submitPost}
-                replyDrafts={replyDrafts}
-                setReplyDrafts={setReplyDrafts}
-                submitReply={submitReply}
-                toggleLike={toggleLike}
-                hasSubscription={hasSubscription}
-                startCheckout={startCheckout}
-              />
-            )}
+              {page === "community" && (
+                <CommunityPage
+                  profile={profile}
+                  posts={communityPosts}
+                  loading={communityLoading}
+                  newPost={newPost}
+                  setNewPost={setNewPost}
+                  submitPost={submitPost}
+                  replyDrafts={replyDrafts}
+                  setReplyDrafts={setReplyDrafts}
+                  submitReply={submitReply}
+                  toggleLike={toggleLike}
+                  hasSubscription={hasSubscription}
+                  startCheckout={startCheckout}
+                />
+              )}
 
-            {page === "account" && (
-              <AccountPage
-                profile={profile}
-                hasSubscription={hasSubscription}
-                openBilling={openBilling}
-                startCheckout={startCheckout}
-                accountName={accountName}
-                setAccountName={setAccountName}
-                updateDisplayName={updateDisplayName}
-                accountPassword={accountPassword}
-                setAccountPassword={setAccountPassword}
-                updateAccountPassword={updateAccountPassword}
-                accountNotice={accountNotice}
-                accountError={accountError}
-                accountLoading={accountLoading}
-                signOut={signOut}
-              />
-            )}
+              {page === "account" && (
+                <AccountPage
+                  profile={profile}
+                  hasSubscription={hasSubscription}
+                  openBilling={openBilling}
+                  startCheckout={startCheckout}
+                  accountName={accountName}
+                  setAccountName={setAccountName}
+                  updateDisplayName={updateDisplayName}
+                  accountPassword={accountPassword}
+                  setAccountPassword={setAccountPassword}
+                  updateAccountPassword={updateAccountPassword}
+                  accountNotice={accountNotice}
+                  accountError={accountError}
+                  accountLoading={accountLoading}
+                  signOut={signOut}
+                />
+              )}
 
-            {page === "resources" && (
-              <ResourcesPage
-                tipVideoIndices={tipVideoIndices}
-                learnVideoIndices={learnVideoIndices}
-                rerollTips={() => setTipVideoIndices(randomIndices(4, 18))}
-                rerollLearn={() => setLearnVideoIndices(randomIndices(4, 18))}
-              />
-            )}
+              {page === "resources" && (
+                <ResourcesPage
+                  tipVideoIndices={tipVideoIndices}
+                  learnVideoIndices={learnVideoIndices}
+                  rerollTips={() => setTipVideoIndices(randomIndices(4, 18))}
+                  rerollLearn={() => setLearnVideoIndices(randomIndices(4, 18))}
+                />
+              )}
 
-            {page === "centres" && (
-              <TestCentresPage
-                centreSearch={centreSearch}
-                setCentreSearch={setCentreSearch}
-                centreVideos={centreVideos}
-                refreshCentres={() => setCentreVideos(randomItems(TEST_CENTRE_VIDEOS, 4))}
-              />
+              {page === "centres" && (
+                <TestCentresPage
+                  centreSearch={centreSearch}
+                  setCentreSearch={setCentreSearch}
+                  centreVideos={centreVideos}
+                  refreshCentres={() => setCentreVideos(randomItems(TEST_CENTRE_VIDEOS, 4))}
+                />
+              )}
+            </div>
+
+            {page !== "dashboard" && (
+              <FooterNav page={page} setPage={setPage} />
             )}
           </>
         )}
@@ -2022,60 +2028,23 @@ function FeaturePill({ text }) {
   );
 }
 
-
 function Header({ page, setPage, saveState, profile, signOut, hasSubscription, startCheckout, openBilling }) {
   const navItems = [
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      subtitle: "Your learning home",
-      image: "/icons/dashboard.png",
-      tint: BRAND.blueLight,
-    },
-    {
-      id: "progress tracker",
-      label: "Progress Tracker",
-      subtitle: "Track your skills",
-      image: "/icons/progress.png",
-      tint: BRAND.blueLight,
-    },
-    {
-      id: "ask",
-      label: "Ask Francis",
-      subtitle: "Get help from me",
-      image: "/icons/ask-francis.png",
-      tint: "#eefcf6",
-    },
-    {
-      id: "community",
-      label: "Community",
-      subtitle: "Chat with learners",
-      image: "/icons/community.png",
-      tint: BRAND.blueLight,
-    },
-    {
-      id: "resources",
-      label: "Video Tips",
-      subtitle: "Quick watch lessons",
-      image: "/icons/tips.png",
-      tint: BRAND.blueLight,
-    },
-    {
-      id: "centres",
-      label: "Test Centres",
-      subtitle: "Find your route",
-      image: "/icons/test-centres.png",
-      tint: BRAND.blueLight,
-    },
+    { id: "dashboard", label: "Dashboard", image: "/icons/dashboard.png" },
+    { id: "progress tracker", label: "Progress", image: "/icons/progress.png" },
+    { id: "ask", label: "Ask Francis", image: "/icons/ask-francis.png" },
+    { id: "community", label: "Community", image: "/icons/community.png" },
+    { id: "resources", label: "Video Tips", image: "/icons/tips.png" },
+    { id: "centres", label: "Test Centres", image: "/icons/test-centres.png" },
   ];
 
   return (
     <header
-      className="mb-4 rounded-[24px] border bg-white/95 shadow-[0_10px_40px_rgba(71,119,143,0.10)] sm:mb-6 sm:rounded-[28px]"
+      className="mb-4 rounded-[24px] border bg-white/95 backdrop-blur shadow-[0_10px_40px_rgba(71,119,143,0.10)] sm:mb-6 sm:rounded-[28px]"
       style={{ borderColor: BRAND.border }}
     >
       <div className="px-4 py-4 sm:px-5 sm:py-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
             <div
               className="inline-flex max-w-full items-center gap-3 rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.22em] sm:text-xs"
@@ -2097,123 +2066,117 @@ function Header({ page, setPage, saveState, profile, signOut, hasSubscription, s
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+          <div className="flex flex-wrap items-center gap-2 md:justify-end">
+         
             <div
-              className="rounded-full px-3 py-1.5 text-[11px] font-semibold sm:text-xs"
+              className="rounded-full px-3 py-1 text-xs font-semibold"
               style={{
                 backgroundColor: hasSubscription ? BRAND.greenLight : BRAND.slate,
                 color: hasSubscription ? BRAND.green : BRAND.white,
-                border: `1px solid ${BRAND.border}`,
               }}
             >
               {hasSubscription ? "Subscriber" : "Not subscribed"}
             </div>
-
+            {hasSubscription ? (
+              <button
+                onClick={openBilling}
+                className="rounded-full px-3 py-1 text-xs font-bold"
+                style={{ backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
+              >
+                Account
+              </button>
+            ) : (
+              <button
+                onClick={() => setPage("account")}
+                className="rounded-full px-3 py-1 text-xs font-bold"
+                style={{ backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
+              >
+                Account
+              </button>
+            )}
             <button
-              onClick={() => setPage("account")}
-              className="rounded-full px-3 py-1.5 text-[11px] font-bold sm:text-xs"
-              style={{
-                backgroundColor: BRAND.white,
-                color: BRAND.navy,
-                border: `1px solid ${BRAND.border}`,
-              }}
-            >
-              Account
-            </button>
-
-            <button
+              className="rounded-full px-3 py-1 text-xs font-bold"
+              style={{ backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
               onClick={signOut}
-              className="rounded-full px-3 py-1.5 text-[11px] font-bold sm:text-xs"
-              style={{
-                backgroundColor: BRAND.white,
-                color: BRAND.navy,
-                border: `1px solid ${BRAND.border}`,
-              }}
             >
               Sign out
             </button>
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3">
+        {page === "dashboard" && (
+          <nav className="mt-5 grid grid-cols-3 gap-3 sm:gap-4">
+            {navItems.map((item) => {
+              const active = page === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setPage(item.id)}
+                  className="rounded-[22px] p-3 text-center ring-1 transition sm:p-4"
+                  style={{
+                    backgroundColor: active ? BRAND.navy : BRAND.white,
+                    color: active ? BRAND.white : BRAND.navy,
+                    borderColor: active ? BRAND.navy : BRAND.border,
+                    boxShadow: active ? "0 14px 28px rgba(71,119,143,0.22)" : "0 8px 20px rgba(71,119,143,0.08)",
+                  }}
+                >
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[18px] sm:h-20 sm:w-20" style={{ backgroundColor: active ? "rgba(255,255,255,0.12)" : BRAND.blueLight }}>
+                    <img src={item.image} alt={item.label} className="h-10 w-10 rounded-[14px] object-cover sm:h-14 sm:w-14" />
+                  </div>
+                  <p className="mt-3 text-[11px] font-black leading-tight sm:text-sm">{item.label}</p>
+                </button>
+              );
+            })}
+          </nav>
+        )}
+      </div>
+    </header>
+  );
+}
+
+function FooterNav({ page, setPage }) {
+  const navItems = [
+    { id: "dashboard", label: "Dashboard", image: "/icons/dashboard.png" },
+    { id: "progress tracker", label: "Progress Tracker", image: "/icons/progress.png" },
+    { id: "ask", label: "Ask Francis", image: "/icons/ask-francis.png" },
+    { id: "community", label: "Community", image: "/icons/community.png" },
+    { id: "resources", label: "Video Tips", image: "/icons/tips.png" },
+    { id: "centres", label: "Test Centres", image: "/icons/test-centres.png" },
+  ];
+
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-50 px-3 pb-3 sm:px-5 sm:pb-5">
+      <div
+        className="mx-auto max-w-3xl rounded-[26px] border bg-white/95 px-3 py-2 shadow-[0_18px_45px_rgba(71,119,143,0.18)] backdrop-blur"
+        style={{ borderColor: BRAND.border }}
+      >
+        <div className="grid grid-cols-6 gap-2">
           {navItems.map((item) => {
             const active = page === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => setPage(item.id)}
-                className="group rounded-[28px] p-3 text-left transition sm:p-4"
+                className="flex items-center justify-center rounded-2xl p-2 transition"
                 style={{
-                  backgroundColor: active ? BRAND.navy : BRAND.white,
-                  color: active ? BRAND.white : BRAND.navy,
-                  border: `1px solid ${BRAND.border}`,
-                  boxShadow: active
-                    ? "0 18px 40px rgba(71,119,143,0.20)"
-                    : "0 12px 28px rgba(71,119,143,0.08)",
+                  backgroundColor: active ? BRAND.navy : "transparent",
+                  boxShadow: active ? "0 10px 20px rgba(71,119,143,0.18)" : "none",
                 }}
+                aria-label={item.label}
+                title={item.label}
               >
-                <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
-                  <div
-                    className="mb-2 h-16 w-16 overflow-hidden rounded-[22px] ring-1 sm:mb-3 sm:h-20 sm:w-20"
-                    style={{
-                      borderColor: BRAND.border,
-                      backgroundColor: BRAND.blueLight,
-                      boxShadow: "0 10px 24px rgba(71,119,143,0.12)",
-                    }}
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.label}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-
-                  <p className="text-sm font-black leading-tight sm:hidden">
-                    {item.mobileLabel}
-                  </p>
-
-                  <div className="hidden sm:block">
-                    <p className="text-lg font-black leading-tight">{item.label}</p>
-                    <p
-                      className="mt-1 text-sm leading-5"
-                      style={{ color: active ? "rgba(255,255,255,0.86)" : BRAND.slate }}
-                    >
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
+                <img
+                  src={item.image}
+                  alt={item.label}
+                  className="h-8 w-8 rounded-xl object-cover sm:h-9 sm:w-9"
+                  style={{ filter: active ? "brightness(1.08)" : "none" }}
+                />
               </button>
             );
           })}
         </div>
-
-        <div className="mt-3 hidden sm:flex items-center justify-end gap-2">
-          <div
-            className="rounded-full px-3 py-1 text-xs font-semibold"
-            style={{ backgroundColor: BRAND.blueLight, color: BRAND.slate }}
-          >
-            {saveState}
-          </div>
-          {hasSubscription ? (
-            <button
-              onClick={openBilling}
-              className="rounded-full px-3 py-1 text-xs font-bold"
-              style={{ backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
-            >
-              Manage billing
-            </button>
-          ) : (
-            <button
-              onClick={startCheckout}
-              className="rounded-full px-3 py-1 text-xs font-bold"
-              style={{ backgroundColor: BRAND.navy, color: BRAND.white }}
-            >
-              Upgrade
-            </button>
-          )}
-        </div>
       </div>
-    </header>
+    </div>
   );
 }
 
@@ -2286,7 +2249,7 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
             <TransmissionToggle transmission={profile.transmission} compact />
           </div>
 
-          <div className="mt-4">
+          <div className="mt-4 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-4xl font-black tracking-tight sm:text-7xl" style={{ color: BRAND.navy }}>
                 {scoring.score}%
@@ -2296,6 +2259,8 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
                 {scoring.message}
               </p>
             </div>
+
+           
           </div>
 
           <div className="mt-6">
@@ -2360,9 +2325,7 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
                 <p className="text-sm font-black uppercase tracking-[0.18em]" style={{ color: BRAND.green }}>
                   Subscription active
                 </p>
-                <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
-                  You’ve got full access. If you need to update payment details or manage your subscription, use the button below.
-                </p>
+               
                 <button
                   onClick={openBilling}
                   className="mt-4 rounded-2xl px-4 py-3 text-sm font-bold"
