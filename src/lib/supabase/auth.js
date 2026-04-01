@@ -3,7 +3,7 @@ import { createClient } from "./client.js";
 const appUrl =
   process.env.NEXT_PUBLIC_APP_URL || "https://www.drivingschooltv.com";
 
-export async function signUpWithEmail({ email, password }) {
+export async function signUpWithEmail({ email, password, name, transmission }) {
   const supabase = createClient();
 
   return supabase.auth.signUp({
@@ -11,6 +11,10 @@ export async function signUpWithEmail({ email, password }) {
     password,
     options: {
       emailRedirectTo: appUrl,
+      data: {
+        name: name?.trim() || "",
+        transmission: transmission || "manual",
+      },
     },
   });
 }

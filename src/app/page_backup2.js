@@ -796,9 +796,8 @@ export default function App() {
   const [accountError, setAccountError] = useState("");
   const [accountLoading, setAccountLoading] = useState(false);
   const [dashboardInsightSeed, setDashboardInsightSeed] = useState(() => Math.random());
- const [authError, setAuthError] = useState("");
-const [signupSuccess, setSignupSuccess] = useState("");
-const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
   const [expandedSections, setExpandedSections] = useState(() => {
     const initial = {};
     SYLLABUS.forEach((section) => {
@@ -1101,74 +1100,73 @@ const [authLoading, setAuthLoading] = useState(false);
     })).filter((section) => section.modules.length > 0);
   }, [search, profile.transmission, ratings, selectedRatings]);
 
- async function handleAuthSubmit(e) {
-  e.preventDefault();
-  setAuthError("");
-  setSignupSuccess("");
-
-  const normalizedEmail = profile.email.trim().toLowerCase();
-  const normalizedPassword = password.trim();
-
-  if (authMode === "signup") {
-    if (!profile.name.trim() || !normalizedEmail || !normalizedPassword) {
-      setAuthError("Please fill in your name, email and password.");
-      return;
-    }
-  } else {
-    if (!normalizedEmail || !normalizedPassword) {
-      setAuthError("Please fill in your email and password.");
-      return;
-    }
-  }
-
-  setAuthLoading(true);
-
-  try {
-    let authResult;
-
+  async function handleAuthSubmit(e) {
+    e.preventDefault();
+    setAuthError("");
+const normalizedEmail = profile.email.trim().toLowerCase();
+const normalizedPassword = password.trim();
     if (authMode === "signup") {
-      authResult = await signUpWithEmail({
-        email: normalizedEmail,
-        password: normalizedPassword,
-        name: profile.name.trim(),
-        transmission: profile.transmission,
-      });
+      if (!profile.name.trim() || !profile.email.trim() || !password.trim()) {
+        setAuthError("Please fill in your name, email and password.");
+        return;
+      }
     } else {
-      authResult = await signInWithEmail({
-        email: normalizedEmail,
-        password: normalizedPassword,
-      });
+      if (!profile.email.trim() || !password.trim()) {
+        setAuthError("Please fill in your email and password.");
+        return;
+      }
     }
 
-    if (authResult.error) {
-      setAuthError(authResult.error.message);
-      return;
-    }
+    setAuthLoading(true);
 
-    const user = authResult.data?.user;
-    if (!user) {
-      setAuthError("No user came back from Supabase.");
-      return;
-    }
+    try {
+      let authResult;
 
-    if (authMode === "signup") {
-      setPassword("");
-      setSignupSuccess(
-        "Account created. Check your email and confirm your address, then sign in."
-      );
-      setAuthMode("signin");
-      return;
-    }
+      if (authMode === "signup") {
+        authResult = await signUpWithEmail({
+  email: normalizedEmail,
+  password: normalizedPassword,
+  name: profile.name.trim(),
+  transmission: profile.transmission,
+});
+      } else {
+        authResult = await signUpWithEmail({
+  email: normalizedEmail,
+  password: normalizedPassword,
+  name: profile.name.trim(),
+  transmission: profile.transmission,
+});
+      }
 
-    setPassword("");
-    await hydrateUserData();
-  } catch (error) {
-    console.error(error);
-    setAuthError("Something went wrong signing you in.");
-  } finally {
-    setAuthLoading(false);
-  }
+      if (authResult.error) {
+        setAuthError(authResult.error.message);
+        return;
+      }
+
+      const user = authResult.data?.user;
+      if (!user) {
+        setAuthError("No user came back from Supabase.");
+        return;
+      }
+
+     if (authMode === "signup") {
+  setPassword("");
+  setAuthLoading(false);
+  setAuthError(
+    "Account created. Check your email and confirm your address, then sign in."
+  );
+  return;
 }
+
+      setPassword("");
+      await hydrateUserData();
+    } catch (error) {
+      console.error(error);
+      setAuthError("Something went wrong signing you in.");
+    } finally {
+      setAuthLoading(false);
+    }
+  }
 
   async function signOut() {
     try {
@@ -1602,17 +1600,16 @@ const [authLoading, setAuthLoading] = useState(false);
       <div className="mx-auto max-w-7xl px-3 py-4 sm:px-5 lg:px-8">
         {!profile.isSignedIn ? (
           <LandingPage
-  profile={profile}
-  setProfile={setProfile}
-  authMode={authMode}
-  setAuthMode={setAuthMode}
-  onSubmit={handleAuthSubmit}
-  password={password}
-  setPassword={setPassword}
-  authError={authError}
-  signupSuccess={signupSuccess}
-  authLoading={authLoading}
-/>
+            profile={profile}
+            setProfile={setProfile}
+            authMode={authMode}
+            setAuthMode={setAuthMode}
+            onSubmit={handleAuthSubmit}
+            password={password}
+            setPassword={setPassword}
+            authError={authError}
+            authLoading={authLoading}
+          />
         ) : (
           <>
             <Header
@@ -1765,7 +1762,6 @@ function LandingPage({
   password,
   setPassword,
   authError,
-  signupSuccess,
   authLoading,
 }) {
   return (
@@ -1941,32 +1937,18 @@ function LandingPage({
               </div>
             )}
 
-{signupSuccess ? (
-  <div
-    className="rounded-2xl px-4 py-3 text-sm"
-    style={{
-      backgroundColor: BRAND.greenLight,
-      color: BRAND.green,
-      border: `1px solid ${BRAND.border}`,
-    }}
-  >
-    {signupSuccess}
-  </div>
-) : null}
-
-{authError ? (
-  <div
-    className="rounded-2xl px-4 py-3 text-sm"
-    style={{
-      backgroundColor: BRAND.redLight,
-      color: BRAND.red,
-      border: `1px solid ${BRAND.border}`,
-    }}
-  >
-    {authError}
-  </div>
-) : null}
-
+            {authError ? (
+              <div
+                className="rounded-2xl px-4 py-3 text-sm"
+                style={{
+                  backgroundColor: BRAND.redLight,
+                  color: BRAND.red,
+                  border: `1px solid ${BRAND.border}`,
+                }}
+              >
+                {authError}
+              </div>
+            ) : null}
 
             <button
               type="submit"
@@ -2012,7 +1994,7 @@ function LandingPage({
           <div className="mt-4 space-y-3 text-sm leading-6" style={{ color: BRAND.slate }}>
             <p><span className="font-bold" style={{ color: BRAND.navy }}>Billing:</span> subscriptions are handled securely through Stripe, and you can manage or cancel them any time from your account once subscribed.</p>
             <p><span className="font-bold" style={{ color: BRAND.navy }}>Access:</span> free users can explore the app and watch the built-in video tips, while subscription unlocks the progress tracker, Ask Francis and the community.</p>
-            <p><span className="font-bold" style={{ color: BRAND.navy }}>Terms:</span> this subscription is for individual learner-driver use through your own account and access should not be shared.</p>
+            <p><span className="font-bold" style={{ color: BRAND.navy }}>Terms:</span> this is personal learner-driver access for using the app yourself, not something to be shared around like a family bag of crisps.</p>
           </div>
         </div>
       </section>
@@ -2050,9 +2032,9 @@ function Header({ page, setPage, saveState, profile, signOut, hasSubscription, s
       className="mb-4 rounded-[24px] border bg-white/95 backdrop-blur shadow-[0_10px_40px_rgba(71,119,143,0.10)] sm:mb-5 sm:rounded-[28px]"
       style={{ borderColor: BRAND.border }}
     >
-      <div className="px-4 py-4 sm:px-5 sm:py-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="min-w-0">
+      <div className="flex flex-col gap-3 px-4 py-4 sm:px-5 sm:py-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex items-start justify-between gap-3 lg:min-w-0">
+          <div>
             <div
               className="mb-2 inline-flex items-center gap-3 rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.25em]"
               style={{
@@ -2064,7 +2046,7 @@ function Header({ page, setPage, saveState, profile, signOut, hasSubscription, s
               <img src={LOGO_URL} alt="Driving School TV logo" className="h-8 w-8 rounded-full" />
               <span>Driving School TV</span>
             </div>
-            <h1 className="text-[1.8rem] leading-none font-black tracking-tight sm:text-[2.2rem] lg:text-[2.45rem]" style={{ color: BRAND.navy }}>
+            <h1 className="text-[2.05rem] leading-none font-black tracking-tight sm:text-[2.35rem] md:text-[2.8rem]" style={{ color: BRAND.navy }}>
               Instructor In Your Pocket
             </h1>
             <p className="mt-1 text-sm sm:text-base" style={{ color: BRAND.slate }}>
@@ -2072,16 +2054,7 @@ function Header({ page, setPage, saveState, profile, signOut, hasSubscription, s
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-            <div
-              className="rounded-full px-3 py-1 text-xs font-semibold"
-              style={{
-                backgroundColor: hasSubscription ? BRAND.greenLight : BRAND.yellowLight,
-                color: hasSubscription ? BRAND.green : BRAND.navy,
-              }}
-            >
-              {hasSubscription ? "Subscriber" : "Not subscribed"}
-            </div>
+          <div className="flex items-center gap-2 shrink-0">
             <button
               className="rounded-full px-2.5 py-1 text-[11px] font-bold"
               style={{
@@ -2107,15 +2080,15 @@ function Header({ page, setPage, saveState, profile, signOut, hasSubscription, s
           </div>
         </div>
 
-        <div className="mt-4 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <nav className="flex min-w-max gap-2">
+        <div className="flex flex-col gap-2 lg:items-end lg:flex-1 lg:min-w-0">
+          <nav className="flex flex-wrap gap-2 justify-start lg:justify-end">
             {navItems.map((item) => {
               const active = page === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => setPage(item.id)}
-                  className="rounded-full px-4 py-2 text-sm font-bold transition whitespace-nowrap"
+                  className="rounded-2xl px-3.5 py-2 text-[0.95rem] font-bold transition whitespace-nowrap"
                   style={
                     active
                       ? { backgroundColor: BRAND.navy, color: BRAND.white }
@@ -2131,6 +2104,18 @@ function Header({ page, setPage, saveState, profile, signOut, hasSubscription, s
               );
             })}
           </nav>
+
+          <div className="flex flex-wrap items-center gap-2 justify-end">
+            <div
+              className="rounded-full px-3 py-1 text-xs font-semibold"
+              style={{
+                backgroundColor: hasSubscription ? BRAND.greenLight : BRAND.yellowLight,
+                color: hasSubscription ? BRAND.green : BRAND.navy,
+              }}
+            >
+              {hasSubscription ? "Subscriber" : "Free account"}
+            </div>
+          </div>
         </div>
       </div>
     </header>
@@ -2217,7 +2202,19 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
               </p>
             </div>
 
-
+            {!hasSubscription ? (
+              <div
+                className="rounded-[22px] p-4 shadow-sm backdrop-blur ring-1 sm:rounded-[28px] sm:p-5"
+                style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}
+              >
+                <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.slate }}>
+                  Subscriber snapshot
+                </p>
+                <p className="mt-2 max-w-[260px] text-sm leading-6" style={{ color: BRAND.slate }}>
+                  You’re on the free account right now. You can browse the app and watch the built-in video tips, but the full tracker, Ask Francis and community unlock with subscription.
+                </p>
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-6">
