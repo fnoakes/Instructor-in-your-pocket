@@ -46,7 +46,7 @@ const FRANCIS_PHOTO_URL =
   "https://static.wixstatic.com/media/18cc8c_0ec5f02424654bfd8d472c39e8629393~mv2.jpeg/v1/crop/x_0,y_0,w_3689,h_4000/fill/w_862,h_934,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/francis_JPEG.jpeg";
 const TIPS_PLAYLIST_ID = "PLWV7lt2OClXJD_ud1evtxh42kQzdvSID3";
 const LEARN_PLAYLIST_ID = "PLWV7lt2OClXK8QHGz-Lxup6IXA0udWkjy";
-const SUPPORT_EMAIL = "francis@drivingschooltv.com";
+const SUPPORT_EMAIL = "support@drivingschooltv.com";
 
 const TEST_CENTRE_VIDEOS = [
   { centre: "Abergavenny", url: "https://youtu.be/roZxui9s6io" },
@@ -797,7 +797,6 @@ export default function App() {
   const [accountLoading, setAccountLoading] = useState(false);
   const [dashboardInsightSeed, setDashboardInsightSeed] = useState(() => Math.random());
   const [authError, setAuthError] = useState("");
-  const [signupSuccess, setSignupSuccess] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [expandedSections, setExpandedSections] = useState(() => {
     const initial = {};
@@ -1101,74 +1100,73 @@ export default function App() {
     })).filter((section) => section.modules.length > 0);
   }, [search, profile.transmission, ratings, selectedRatings]);
 
- async function handleAuthSubmit(e) {
-  e.preventDefault();
-  setAuthError("");
-  setSignupSuccess("");
-
-  const normalizedEmail = profile.email.trim().toLowerCase();
-  const normalizedPassword = password.trim();
-
-  if (authMode === "signup") {
-    if (!profile.name.trim() || !normalizedEmail || !normalizedPassword) {
-      setAuthError("Please fill in your name, email and password.");
-      return;
-    }
-  } else {
-    if (!normalizedEmail || !normalizedPassword) {
-      setAuthError("Please fill in your email and password.");
-      return;
-    }
-  }
-
-  setAuthLoading(true);
-
-  try {
-    let authResult;
-
+  async function handleAuthSubmit(e) {
+    e.preventDefault();
+    setAuthError("");
+const normalizedEmail = profile.email.trim().toLowerCase();
+const normalizedPassword = password.trim();
     if (authMode === "signup") {
-      authResult = await signUpWithEmail({
-        email: normalizedEmail,
-        password: normalizedPassword,
-        name: profile.name.trim(),
-        transmission: profile.transmission,
-      });
+      if (!profile.name.trim() || !profile.email.trim() || !password.trim()) {
+        setAuthError("Please fill in your name, email and password.");
+        return;
+      }
     } else {
-      authResult = await signInWithEmail({
-        email: normalizedEmail,
-        password: normalizedPassword,
-      });
+      if (!profile.email.trim() || !password.trim()) {
+        setAuthError("Please fill in your email and password.");
+        return;
+      }
     }
 
-    if (authResult.error) {
-      setAuthError(authResult.error.message);
-      return;
-    }
+    setAuthLoading(true);
 
-    const user = authResult.data?.user;
-    if (!user) {
-      setAuthError("No user came back from Supabase.");
-      return;
-    }
+    try {
+      let authResult;
 
-    if (authMode === "signup") {
-      setPassword("");
-      setSignupSuccess(
-        "Account created. Check your email and confirm your address, then sign in."
-      );
-      setAuthMode("signin");
-      return;
-    }
+      if (authMode === "signup") {
+        authResult = await signUpWithEmail({
+  email: normalizedEmail,
+  password: normalizedPassword,
+  name: profile.name.trim(),
+  transmission: profile.transmission,
+});
+      } else {
+        authResult = await signUpWithEmail({
+  email: normalizedEmail,
+  password: normalizedPassword,
+  name: profile.name.trim(),
+  transmission: profile.transmission,
+});
+      }
 
-    setPassword("");
-    await hydrateUserData();
-  } catch (error) {
-    console.error(error);
-    setAuthError("Something went wrong signing you in.");
-  } finally {
-    setAuthLoading(false);
-  }
+      if (authResult.error) {
+        setAuthError(authResult.error.message);
+        return;
+      }
+
+      const user = authResult.data?.user;
+      if (!user) {
+        setAuthError("No user came back from Supabase.");
+        return;
+      }
+
+     if (authMode === "signup") {
+  setPassword("");
+  setAuthLoading(false);
+  setAuthError(
+    "Account created. Check your email and confirm your address, then sign in."
+  );
+  return;
 }
+
+      setPassword("");
+      await hydrateUserData();
+    } catch (error) {
+      console.error(error);
+      setAuthError("Something went wrong signing you in.");
+    } finally {
+      setAuthLoading(false);
+    }
+  }
 
   async function signOut() {
     try {
@@ -1601,18 +1599,17 @@ export default function App() {
     >
       <div className="mx-auto max-w-7xl px-3 py-4 sm:px-5 lg:px-8">
         {!profile.isSignedIn ? (
-        <LandingPage
-  profile={profile}
-  setProfile={setProfile}
-  authMode={authMode}
-  setAuthMode={setAuthMode}
-  onSubmit={handleAuthSubmit}
-  password={password}
-  setPassword={setPassword}
-  authError={authError}
-  signupSuccess={signupSuccess}
-  authLoading={authLoading}
-/>
+          <LandingPage
+            profile={profile}
+            setProfile={setProfile}
+            authMode={authMode}
+            setAuthMode={setAuthMode}
+            onSubmit={handleAuthSubmit}
+            password={password}
+            setPassword={setPassword}
+            authError={authError}
+            authLoading={authLoading}
+          />
         ) : (
           <>
             <Header
@@ -1626,105 +1623,99 @@ export default function App() {
               openBilling={openBilling}
             />
 
-            <div className={page !== "dashboard" ? "pb-24 sm:pb-28" : ""}>
-              {page === "dashboard" && (
-                <Dashboard
-                  scoring={scoring}
-                  profile={profile}
-                  hasSubscription={hasSubscription}
-                  startCheckout={startCheckout}
-                  openBilling={openBilling}
-                  dashboardInsights={dashboardInsights}
-                />
-              )}
+            {page === "dashboard" && (
+              <Dashboard
+                scoring={scoring}
+                profile={profile}
+                hasSubscription={hasSubscription}
+                startCheckout={startCheckout}
+                openBilling={openBilling}
+                dashboardInsights={dashboardInsights}
+              />
+            )}
 
-              {page === "progress tracker" && (
-                <ProgressTrackerPage
-                  search={search}
-                  setSearch={setSearch}
-                  selectedRatings={selectedRatings}
-                  toggleRatingFilter={toggleRatingFilter}
-                  clearRatingFilters={clearRatingFilters}
-                  scoring={scoring}
-                  ratings={ratings}
-                  updateRating={updateRating}
-                  sections={filteredSections}
-                  expandedSections={expandedSections}
-                  toggleSection={toggleSection}
-                  transmission={profile.transmission}
-                  hasSubscription={hasSubscription}
-                  startCheckout={startCheckout}
-                />
-              )}
+            {page === "progress tracker" && (
+              <ProgressTrackerPage
+                search={search}
+                setSearch={setSearch}
+                selectedRatings={selectedRatings}
+                toggleRatingFilter={toggleRatingFilter}
+                clearRatingFilters={clearRatingFilters}
+                scoring={scoring}
+                ratings={ratings}
+                updateRating={updateRating}
+                sections={filteredSections}
+                expandedSections={expandedSections}
+                toggleSection={toggleSection}
+                transmission={profile.transmission}
+                hasSubscription={hasSubscription}
+                startCheckout={startCheckout}
+              />
+            )}
 
-              {page === "ask" && (
-                <AskFrancisPage
-                  tickets={tickets}
-                  newTicket={newTicket}
-                  setNewTicket={setNewTicket}
-                  submitTicket={submitTicket}
-                  hasSubscription={hasSubscription}
-                  startCheckout={startCheckout}
-                />
-              )}
+            {page === "ask" && (
+              <AskFrancisPage
+                tickets={tickets}
+                newTicket={newTicket}
+                setNewTicket={setNewTicket}
+                submitTicket={submitTicket}
+                hasSubscription={hasSubscription}
+                startCheckout={startCheckout}
+              />
+            )}
 
-              {page === "community" && (
-                <CommunityPage
-                  profile={profile}
-                  posts={communityPosts}
-                  loading={communityLoading}
-                  newPost={newPost}
-                  setNewPost={setNewPost}
-                  submitPost={submitPost}
-                  replyDrafts={replyDrafts}
-                  setReplyDrafts={setReplyDrafts}
-                  submitReply={submitReply}
-                  toggleLike={toggleLike}
-                  hasSubscription={hasSubscription}
-                  startCheckout={startCheckout}
-                />
-              )}
+            {page === "community" && (
+              <CommunityPage
+                profile={profile}
+                posts={communityPosts}
+                loading={communityLoading}
+                newPost={newPost}
+                setNewPost={setNewPost}
+                submitPost={submitPost}
+                replyDrafts={replyDrafts}
+                setReplyDrafts={setReplyDrafts}
+                submitReply={submitReply}
+                toggleLike={toggleLike}
+                hasSubscription={hasSubscription}
+                startCheckout={startCheckout}
+              />
+            )}
 
-              {page === "account" && (
-                <AccountPage
-                  profile={profile}
-                  hasSubscription={hasSubscription}
-                  openBilling={openBilling}
-                  startCheckout={startCheckout}
-                  accountName={accountName}
-                  setAccountName={setAccountName}
-                  updateDisplayName={updateDisplayName}
-                  accountPassword={accountPassword}
-                  setAccountPassword={setAccountPassword}
-                  updateAccountPassword={updateAccountPassword}
-                  accountNotice={accountNotice}
-                  accountError={accountError}
-                  accountLoading={accountLoading}
-                  signOut={signOut}
-                />
-              )}
+            {page === "account" && (
+              <AccountPage
+                profile={profile}
+                hasSubscription={hasSubscription}
+                openBilling={openBilling}
+                startCheckout={startCheckout}
+                accountName={accountName}
+                setAccountName={setAccountName}
+                updateDisplayName={updateDisplayName}
+                accountPassword={accountPassword}
+                setAccountPassword={setAccountPassword}
+                updateAccountPassword={updateAccountPassword}
+                accountNotice={accountNotice}
+                accountError={accountError}
+                accountLoading={accountLoading}
+                signOut={signOut}
+              />
+            )}
 
-              {page === "resources" && (
-                <ResourcesPage
-                  tipVideoIndices={tipVideoIndices}
-                  learnVideoIndices={learnVideoIndices}
-                  rerollTips={() => setTipVideoIndices(randomIndices(4, 18))}
-                  rerollLearn={() => setLearnVideoIndices(randomIndices(4, 18))}
-                />
-              )}
+            {page === "resources" && (
+              <ResourcesPage
+                tipVideoIndices={tipVideoIndices}
+                learnVideoIndices={learnVideoIndices}
+                rerollTips={() => setTipVideoIndices(randomIndices(4, 18))}
+                rerollLearn={() => setLearnVideoIndices(randomIndices(4, 18))}
+              />
+            )}
 
-              {page === "centres" && (
-                <TestCentresPage
-                  centreSearch={centreSearch}
-                  setCentreSearch={setCentreSearch}
-                  centreVideos={centreVideos}
-                  refreshCentres={() => setCentreVideos(randomItems(TEST_CENTRE_VIDEOS, 4))}
-                />
-              )}
-            </div>
-
-            {page !== "dashboard" && (
-              <FooterNav page={page} setPage={setPage} />
+            {page === "centres" && (
+              <TestCentresPage
+                centreSearch={centreSearch}
+                setCentreSearch={setCentreSearch}
+                centreVideos={centreVideos}
+                refreshCentres={() => setCentreVideos(randomItems(TEST_CENTRE_VIDEOS, 4))}
+              />
             )}
           </>
         )}
@@ -1771,7 +1762,6 @@ function LandingPage({
   password,
   setPassword,
   authError,
-  signupSuccess,
   authLoading,
 }) {
   return (
@@ -1801,7 +1791,7 @@ function LandingPage({
           </h1>
 
           <p className="mt-5 max-w-2xl text-base leading-8" style={{ color: BRAND.slate }}>
-            Stop guessing where you’re at. Track your real driving progress with the built in lesson tracker, see whether you’re actually getting test ready, and even ask me, a real driving instructor, questions directly... No AI.
+            Stop guessing where you’re at. Track your real driving progress, see whether you’re actually getting test ready, unlock the full progress tracker, ask me questions directly, and get everything saved across your devices.
           </p>
 
           <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-3">
@@ -1810,7 +1800,24 @@ function LandingPage({
             <FeaturePill text="Video Tips Built In" />
           </div>
 
-        
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-[22px] bg-white p-4 ring-1" style={{ borderColor: BRAND.border }}>
+              <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.navy }}>
+                What you get free
+              </p>
+              <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
+                You can sign up, look around the app, watch the built-in video tips, and see exactly how everything works before spending a penny.
+              </p>
+            </div>
+            <div className="rounded-[22px] bg-white p-4 ring-1" style={{ borderColor: BRAND.border }}>
+              <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.navy }}>
+                What unlocks with subscription
+              </p>
+              <p className="mt-2 text-sm leading-6" style={{ color: BRAND.slate }}>
+                The full progress tracker, your saved pass-likelihood profile, Ask Francis replies, and the subscriber-only community.
+              </p>
+            </div>
+          </div>
         </section>
 
         <section
@@ -1929,18 +1936,7 @@ function LandingPage({
                 </div>
               </div>
             )}
-{signupSuccess ? (
-  <div
-    className="rounded-2xl px-4 py-3 text-sm"
-    style={{
-      backgroundColor: BRAND.greenLight,
-      color: BRAND.green,
-      border: `1px solid ${BRAND.border}`,
-    }}
-  >
-    {signupSuccess}
-  </div>
-) : null}
+
             {authError ? (
               <div
                 className="rounded-2xl px-4 py-3 text-sm"
@@ -1993,14 +1989,12 @@ function LandingPage({
 
         <div className="rounded-[28px] bg-white p-5 ring-1 shadow-[0_20px_60px_rgba(71,119,143,0.06)] sm:p-6" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
-            Trust, billing & contact
+            Billing, terms & access
           </p>
           <div className="mt-4 space-y-3 text-sm leading-6" style={{ color: BRAND.slate }}>
-            <p><span className="font-bold" style={{ color: BRAND.navy }}>Privacy:</span> Your account, saved progress and support messages stay tied to your profile so you can pick things up across devices.</p>
-            <p><span className="font-bold" style={{ color: BRAND.navy }}>Billing:</span> Subscriptions are handled securely through Stripe, and you can manage or cancel from inside the app once subscribed.</p>
-            <p><span className="font-bold" style={{ color: BRAND.navy }}>Refunds:</span> If something billing-related looks wrong, contact support and we’ll fix it as soon as possible.</p>
-            <p><span className="font-bold" style={{ color: BRAND.navy }}>Terms:</span> By using this app, you’re signing up for your own personal learner-driver support. Access is for individual use and isn’t intended to be shared.</p>
-            <p><span className="font-bold" style={{ color: BRAND.navy }}>Contact:</span> {SUPPORT_EMAIL}</p>
+            <p><span className="font-bold" style={{ color: BRAND.navy }}>Billing:</span> subscriptions are handled securely through Stripe, and you can manage or cancel them any time from your account once subscribed.</p>
+            <p><span className="font-bold" style={{ color: BRAND.navy }}>Access:</span> free users can explore the app and watch the built-in video tips, while subscription unlocks the progress tracker, Ask Francis and the community.</p>
+            <p><span className="font-bold" style={{ color: BRAND.navy }}>Terms:</span> this is personal learner-driver access for using the app yourself, not something to be shared around like a family bag of crisps.</p>
           </div>
         </div>
       </section>
@@ -2025,73 +2019,60 @@ function FeaturePill({ text }) {
 
 function Header({ page, setPage, saveState, profile, signOut, hasSubscription, startCheckout, openBilling }) {
   const navItems = [
-    { id: "dashboard", label: "Dashboard", image: "/icons/dashboard.png" },
-    { id: "progress tracker", label: "Progress", image: "/icons/progress.png" },
-    { id: "ask", label: "Ask Francis", image: "/icons/ask-francis.png" },
-    { id: "community", label: "Community", image: "/icons/community.png" },
-    { id: "resources", label: "Video Tips", image: "/icons/tips.png" },
-    { id: "centres", label: "Test Centres", image: "/icons/test-centres.png" },
+    { id: "dashboard", label: "Dashboard" },
+    { id: "progress tracker", label: "Progress Tracker" },
+    { id: "ask", label: "Ask Francis" },
+    { id: "community", label: "Community" },
+    { id: "resources", label: "Video Tips" },
+    { id: "centres", label: "Test Centres" },
   ];
 
   return (
     <header
-      className="mb-4 rounded-[24px] border bg-white/95 backdrop-blur shadow-[0_10px_40px_rgba(71,119,143,0.10)] sm:mb-6 sm:rounded-[28px]"
+      className="mb-4 rounded-[24px] border bg-white/95 backdrop-blur shadow-[0_10px_40px_rgba(71,119,143,0.10)] sm:mb-5 sm:rounded-[28px]"
       style={{ borderColor: BRAND.border }}
     >
-      <div className="px-4 py-4 sm:px-5 sm:py-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="min-w-0">
+      <div className="flex flex-col gap-3 px-4 py-4 sm:px-5 sm:py-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex items-start justify-between gap-3 lg:min-w-0">
+          <div>
             <div
-              className="inline-flex max-w-full items-center gap-3 rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.22em] sm:text-xs"
+              className="mb-2 inline-flex items-center gap-3 rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.25em]"
               style={{
                 backgroundColor: BRAND.blueLight,
                 color: BRAND.navy,
                 border: `1px solid ${BRAND.border}`,
               }}
             >
-              <img src={LOGO_URL} alt="Driving School TV logo" className="h-8 w-8 rounded-full shrink-0" />
-              <span className="truncate">Driving School TV</span>
+              <img src={LOGO_URL} alt="Driving School TV logo" className="h-8 w-8 rounded-full" />
+              <span>Driving School TV</span>
             </div>
-
-            <h1 className="mt-4 max-w-[12ch] text-[2rem] leading-[0.95] font-black tracking-tight sm:max-w-none sm:text-[2.35rem]" style={{ color: BRAND.navy }}>
+            <h1 className="text-[2.05rem] leading-none font-black tracking-tight sm:text-[2.35rem] md:text-[2.8rem]" style={{ color: BRAND.navy }}>
               Instructor In Your Pocket
             </h1>
-            <p className="mt-2 text-sm sm:text-base" style={{ color: BRAND.slate }}>
+            <p className="mt-1 text-sm sm:text-base" style={{ color: BRAND.slate }}>
               Hello {profile.name || "learner"}
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 md:justify-end">
-         
-            <div
-              className="rounded-full px-3 py-1 text-xs font-semibold"
-              style={{
-                backgroundColor: hasSubscription ? BRAND.greenLight : BRAND.slate,
-                color: hasSubscription ? BRAND.green : BRAND.white,
-              }}
-            >
-              {hasSubscription ? "Subscriber" : "Not subscribed"}
-            </div>
-            {hasSubscription ? (
-              <button
-  onClick={() => setPage("account")}
-  className="rounded-full px-3 py-1 text-xs font-bold"
-  style={{ backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
->
-  Account
-</button>
-            ) : (
-              <button
-                onClick={() => setPage("account")}
-                className="rounded-full px-3 py-1 text-xs font-bold"
-                style={{ backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
-              >
-                Account
-              </button>
-            )}
+          <div className="flex items-center gap-2 shrink-0">
             <button
-              className="rounded-full px-3 py-1 text-xs font-bold"
-              style={{ backgroundColor: BRAND.white, color: BRAND.navy, border: `1px solid ${BRAND.border}` }}
+              className="rounded-full px-2.5 py-1 text-[11px] font-bold"
+              style={{
+                backgroundColor: BRAND.yellowLight,
+                color: BRAND.navy,
+                border: `1px solid ${BRAND.border}`,
+              }}
+              onClick={() => setPage("account")}
+            >
+              Account
+            </button>
+            <button
+              className="rounded-full px-2.5 py-1 text-[11px] font-bold"
+              style={{
+                backgroundColor: BRAND.yellowLight,
+                color: BRAND.navy,
+                border: `1px solid ${BRAND.border}`,
+              }}
               onClick={signOut}
             >
               Sign out
@@ -2099,79 +2080,45 @@ function Header({ page, setPage, saveState, profile, signOut, hasSubscription, s
           </div>
         </div>
 
-        {page === "dashboard" && (
-          <nav className="mt-5 grid grid-cols-3 gap-3 sm:gap-4">
+        <div className="flex flex-col gap-2 lg:items-end lg:flex-1 lg:min-w-0">
+          <nav className="flex flex-wrap gap-2 justify-start lg:justify-end">
             {navItems.map((item) => {
               const active = page === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => setPage(item.id)}
-                  className="rounded-[22px] p-3 text-center ring-1 transition sm:p-4"
-                  style={{
-                    backgroundColor: active ? BRAND.navy : BRAND.white,
-                    color: active ? BRAND.white : BRAND.navy,
-                    borderColor: active ? BRAND.navy : BRAND.border,
-                    boxShadow: active ? "0 14px 28px rgba(71,119,143,0.22)" : "0 8px 20px rgba(71,119,143,0.08)",
-                  }}
+                  className="rounded-2xl px-3.5 py-2 text-[0.95rem] font-bold transition whitespace-nowrap"
+                  style={
+                    active
+                      ? { backgroundColor: BRAND.navy, color: BRAND.white }
+                      : {
+                          backgroundColor: BRAND.white,
+                          color: BRAND.navy,
+                          border: `1px solid ${BRAND.border}`,
+                        }
+                  }
                 >
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[18px] sm:h-20 sm:w-20" style={{ backgroundColor: active ? "rgba(255,255,255,0.12)" : BRAND.blueLight }}>
-                    <img src={item.image} alt={item.label} className="h-10 w-10 rounded-[14px] object-cover sm:h-14 sm:w-14" />
-                  </div>
-                  <p className="mt-3 text-[11px] font-black leading-tight sm:text-sm">{item.label}</p>
+                  {item.label}
                 </button>
               );
             })}
           </nav>
-        )}
-      </div>
-    </header>
-  );
-}
 
-function FooterNav({ page, setPage }) {
-  const navItems = [
-    { id: "dashboard", label: "Dashboard", image: "/icons/dashboard.png" },
-    { id: "progress tracker", label: "Progress Tracker", image: "/icons/progress.png" },
-    { id: "ask", label: "Ask Francis", image: "/icons/ask-francis.png" },
-    { id: "community", label: "Community", image: "/icons/community.png" },
-    { id: "resources", label: "Video Tips", image: "/icons/tips.png" },
-    { id: "centres", label: "Test Centres", image: "/icons/test-centres.png" },
-  ];
-
-  return (
-    <div className="fixed inset-x-0 bottom-0 z-50 px-3 pb-3 sm:px-5 sm:pb-5">
-      <div
-        className="mx-auto max-w-3xl rounded-[26px] border bg-white/95 px-3 py-2 shadow-[0_18px_45px_rgba(71,119,143,0.18)] backdrop-blur"
-        style={{ borderColor: BRAND.border }}
-      >
-        <div className="grid grid-cols-6 gap-2">
-          {navItems.map((item) => {
-            const active = page === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setPage(item.id)}
-                className="flex items-center justify-center rounded-2xl p-2 transition"
-                style={{
-                  backgroundColor: active ? BRAND.navy : "transparent",
-                  boxShadow: active ? "0 10px 20px rgba(71,119,143,0.18)" : "none",
-                }}
-                aria-label={item.label}
-                title={item.label}
-              >
-                <img
-                  src={item.image}
-                  alt={item.label}
-                  className="h-8 w-8 rounded-xl object-cover sm:h-9 sm:w-9"
-                  style={{ filter: active ? "brightness(1.08)" : "none" }}
-                />
-              </button>
-            );
-          })}
+          <div className="flex flex-wrap items-center gap-2 justify-end">
+            <div
+              className="rounded-full px-3 py-1 text-xs font-semibold"
+              style={{
+                backgroundColor: hasSubscription ? BRAND.greenLight : BRAND.yellowLight,
+                color: hasSubscription ? BRAND.green : BRAND.navy,
+              }}
+            >
+              {hasSubscription ? "Subscriber" : "Free account"}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </header>
   );
 }
 
@@ -2255,7 +2202,19 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
               </p>
             </div>
 
-           
+            {!hasSubscription ? (
+              <div
+                className="rounded-[22px] p-4 shadow-sm backdrop-blur ring-1 sm:rounded-[28px] sm:p-5"
+                style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}
+              >
+                <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: BRAND.slate }}>
+                  Subscriber snapshot
+                </p>
+                <p className="mt-2 max-w-[260px] text-sm leading-6" style={{ color: BRAND.slate }}>
+                  You’re on the free account right now. You can browse the app and watch the built-in video tips, but the full tracker, Ask Francis and community unlock with subscription.
+                </p>
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-6">
@@ -2269,7 +2228,7 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
           </div>
         </div>
 
-        <div className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
+        <div className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
             Pass insights
           </p>
@@ -2304,16 +2263,16 @@ function Dashboard({ scoring, profile, hasSubscription, startCheckout, openBilli
             </div>
           )}
 
-       <div className="mt-5">
-  {!hasSubscription ? (
-    <PaywallCard
-      title="See the app properly before you pay, then unlock the lot"
-      copy="Free lets you browse the app and use the built-in video library. Subscription unlocks your saved progress tracker, direct Ask Francis access, community posting and the full test readiness view."
-      buttonText="Unlock subscriber access"
-      onClick={startCheckout}
-    />
-  ) : null}
-</div>
+          {!hasSubscription ? (
+            <div className="mt-5">
+              <PaywallCard
+                title="See the app properly before you pay, then unlock the lot"
+                copy="Free lets you browse the app and use the built-in video library. Subscription unlocks your saved progress tracker, direct Ask Francis access, community posting and the full readiness view."
+                buttonText="Unlock subscriber access"
+                onClick={startCheckout}
+              />
+            </div>
+          ) : null}
         </div>
       </section>
     </div>
@@ -2359,7 +2318,7 @@ function ProgressTrackerPage({
         />
       )}
 
-      <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
+      <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
@@ -2434,7 +2393,7 @@ function ProgressTrackerPage({
                 <div className="p-4 sm:p-6" style={{ borderTop: `1px solid ${BRAND.border}` }}>
                   <div className="space-y-4">
                     {section.modules.map((module) => (
-                      <div key={module.title} className="rounded-[22px] p-4 ring-1 sm:rounded-[28px] sm:p-5" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
+                      <div key={module.title} className="rounded-[22px] p-3 ring-1 sm:rounded-[28px] sm:p-4" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
                         <h4 className="text-lg font-black" style={{ color: BRAND.navy }}>
                           {module.title}
                         </h4>
@@ -2557,7 +2516,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
       )}
 
       <div className="grid gap-4 xl:gap-6 xl:grid-cols-[1fr,1fr]">
-        <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
+        <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
             Submit a question
           </p>
@@ -2581,7 +2540,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
                 value={newTicket.message}
                 disabled={!hasSubscription}
                 onChange={(e) => setNewTicket((prev) => ({ ...prev, message: e.target.value }))}
-                rows={4}
+                rows={3}
                 placeholder={hasSubscription ? "Explain what happened, what you’re worried about, and what you want help with." : "Upgrade to use Ask Francis"}
                 className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 disabled:opacity-60"
                 style={{ borderColor: BRAND.border }}
@@ -2594,7 +2553,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
                 value={newTicket.links}
                 disabled={!hasSubscription}
                 onChange={(e) => setNewTicket((prev) => ({ ...prev, links: e.target.value }))}
-                rows={2}
+                rows={1}
                 placeholder={hasSubscription ? "Paste YouTube or social media links here if they help illustrate your question." : "Upgrade to send links"}
                 className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 disabled:opacity-60"
                 style={{ borderColor: BRAND.border }}
@@ -2615,7 +2574,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
         </section>
 
         <section>
-          <div className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
+          <div className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
@@ -2636,7 +2595,7 @@ function AskFrancisPage({ tickets, newTicket, setNewTicket, submitTicket, hasSub
             ) : (
               <div className="mt-4 space-y-4">
                 {tickets.map((ticket) => (
-                  <div key={ticket.id} className="rounded-[22px] p-4 ring-1 sm:rounded-[28px] sm:p-5" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
+                  <div key={ticket.id} className="rounded-[22px] p-3 ring-1 sm:rounded-[28px] sm:p-4" style={{ backgroundColor: BRAND.white, borderColor: BRAND.border }}>
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <h3 className="text-lg font-black">{ticket.subject}</h3>
@@ -2735,7 +2694,7 @@ function AccountPage({
       </section>
 
       <div className="grid gap-4 xl:gap-6 xl:grid-cols-[1fr,1fr]">
-        <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
+        <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
             Your account details
           </p>
@@ -2811,7 +2770,7 @@ function AccountPage({
           )}
         </section>
 
-        <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
+        <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
             Billing, trust & support
           </p>
@@ -2821,7 +2780,7 @@ function AccountPage({
               <p className="text-sm font-semibold" style={{ color: BRAND.navy }}>Billing</p>
               <p className="mt-1 text-sm leading-6" style={{ color: BRAND.slate }}>
                 {hasSubscription
-                  ? "Your subscription is handled securely through Stripe. You can manage payment details or cancel, through Stripe, using the Manage subscription button below."
+                  ? "Your subscription is handled securely through Stripe. You can manage payment details or cancel from the billing portal."
                   : "You’re on the free account right now. Upgrade whenever you want full tracker access, Ask Francis, and the community."}
               </p>
             </div>
@@ -2834,7 +2793,7 @@ function AccountPage({
             <div className="rounded-2xl p-4 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
               <p className="text-sm font-semibold" style={{ color: BRAND.navy }}>Terms</p>
               <p className="mt-1 text-sm leading-6" style={{ color: BRAND.slate }}>
-                This is personal subscriber access for learners using the app directly. Please don’t share paid access around or use it in ways clearly not intended.
+                Subscription access is provided for the account holder and is subject to the app’s normal use terms. Access, features and billing settings are managed through your account.
               </p>
             </div>
             <div className="rounded-2xl p-4 ring-1" style={{ backgroundColor: BRAND.blueLight, borderColor: BRAND.border }}>
@@ -2919,7 +2878,7 @@ function ResourcesPage({ tipVideoIndices, learnVideoIndices, rerollTips, rerollL
 
 function PlaylistSection({ title, copy, playlistId, indices, onRefresh, buttonText }) {
   return (
-    <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
+    <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
@@ -2991,7 +2950,7 @@ function TestCentresPage({ centreSearch, setCentreSearch, centreVideos, refreshC
         </p>
       </section>
 
-      <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
+      <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex-1">
             <label className="mb-2 block text-sm font-bold" style={{ color: BRAND.navy }}>
@@ -3079,7 +3038,7 @@ function CommunityPage({
 }) {
   return (
     <div className="grid gap-4 xl:gap-6 xl:grid-cols-[0.95fr,1.05fr]">
-      <section className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-6" style={{ borderColor: BRAND.border }}>
+      <section className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.08)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
         <p className="text-sm font-black uppercase tracking-[0.25em]" style={{ color: BRAND.navy }}>
           Community
         </p>
@@ -3092,7 +3051,7 @@ function CommunityPage({
           <div className="mt-5">
             <PaywallCard
               title="Community is for subscribers"
-              copy="Free lets you see that the community exists. Subscribe to unlock the actual posts, replies, likes and interact here."
+              copy="Free lets you see that the community exists. Subscription unlocks the actual posts, replies and likes so it becomes something you can really use."
               buttonText="Unlock community"
               onClick={startCheckout}
             />
@@ -3148,7 +3107,7 @@ function CommunityPage({
               value={newPost.body}
               disabled={!hasSubscription}
               onChange={(e) => setNewPost((prev) => ({ ...prev, body: e.target.value }))}
-              rows={4}
+              rows={3}
               placeholder={hasSubscription ? "What’s happened? What are you stuck on? What are you overthinking?" : "Upgrade to use community"}
               className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 disabled:opacity-60"
               style={{ borderColor: BRAND.border }}
@@ -3182,7 +3141,7 @@ function CommunityPage({
           </div>
         ) : (
           posts.map((post) => (
-            <article key={post.id} className="rounded-[24px] bg-white p-4 shadow-[0_20px_60px_rgba(71,119,143,0.06)] ring-1 sm:rounded-[32px] sm:p-5" style={{ borderColor: BRAND.border }}>
+            <article key={post.id} className="rounded-[24px] bg-white p-3 shadow-[0_20px_60px_rgba(71,119,143,0.06)] ring-1 sm:rounded-[32px] sm:p-4" style={{ borderColor: BRAND.border }}>
               <div className="flex items-center justify-between gap-3">
                 <span className="rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.2em]" style={{ backgroundColor: BRAND.yellowLight, color: BRAND.navy }}>
                   {post.tag}
@@ -3237,7 +3196,7 @@ function CommunityPage({
                 <textarea
                   value={replyDrafts[post.id] || ""}
                   onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [post.id]: e.target.value }))}
-                  rows={2}
+                  rows={1}
                   placeholder="Write a reply..."
                   className="w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none"
                   style={{ borderColor: BRAND.border }}
