@@ -1801,7 +1801,7 @@ function LandingPage({
           </h1>
 
           <p className="mt-5 max-w-2xl text-base leading-8" style={{ color: BRAND.slate }}>
-            Stop guessing where you’re at. Track your real driving progress with the built in lesson tracker, see whether you’re actually getting test ready, and even ask me, a real driving instructor, questions directly... No AI.
+            Stop guessing where you’re at. Use the built in lesson tracker to see your real progress, understand how close you are to test ready, and ask me, a real driving instructor, questions directly. No AI.
           </p>
 
           <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-3">
