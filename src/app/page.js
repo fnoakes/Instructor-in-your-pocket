@@ -797,6 +797,7 @@ export default function App() {
   const [accountLoading, setAccountLoading] = useState(false);
   const [dashboardInsightSeed, setDashboardInsightSeed] = useState(() => Math.random());
   const [authError, setAuthError] = useState("");
+  const [signupSuccess, setSignupSuccess] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [expandedSections, setExpandedSections] = useState(() => {
     const initial = {};
@@ -1100,71 +1101,74 @@ export default function App() {
     })).filter((section) => section.modules.length > 0);
   }, [search, profile.transmission, ratings, selectedRatings]);
 
-  async function handleAuthSubmit(e) {
-    e.preventDefault();
-    setAuthError("");
+ async function handleAuthSubmit(e) {
+  e.preventDefault();
+  setAuthError("");
+  setSignupSuccess("");
 
-    if (authMode === "signup") {
-      if (!profile.name.trim() || !profile.email.trim() || !password.trim()) {
-        setAuthError("Please fill in your name, email and password.");
-        return;
-      }
-    } else {
-      if (!profile.email.trim() || !password.trim()) {
-        setAuthError("Please fill in your email and password.");
-        return;
-      }
+  const normalizedEmail = profile.email.trim().toLowerCase();
+  const normalizedPassword = password.trim();
+
+  if (authMode === "signup") {
+    if (!profile.name.trim() || !normalizedEmail || !normalizedPassword) {
+      setAuthError("Please fill in your name, email and password.");
+      return;
     }
-
-    setAuthLoading(true);
-
-    try {
-      let authResult;
-
-      if (authMode === "signup") {
-        authResult = await signUpWithEmail({
-          email: profile.email,
-          password,
-        });
-      } else {
-        authResult = await signInWithEmail({
-          email: profile.email,
-          password,
-        });
-      }
-
-      if (authResult.error) {
-        setAuthError(authResult.error.message);
-        return;
-      }
-
-      const user = authResult.data?.user;
-      if (!user) {
-        setAuthError("No user came back from Supabase.");
-        return;
-      }
-
-      if (authMode === "signup") {
-        const supabase = createClient();
-      if (authMode === "signup") {
-  setPassword("");
-  setSignupSuccess(
-    "Account created. Check your email and confirm your address, then sign in."
-  );
-  setAuthMode("signin");
-  return;
-}
-      }
-
-      setPassword("");
-      await hydrateUserData();
-    } catch (error) {
-      console.error(error);
-      setAuthError("Something went wrong signing you in.");
-    } finally {
-      setAuthLoading(false);
+  } else {
+    if (!normalizedEmail || !normalizedPassword) {
+      setAuthError("Please fill in your email and password.");
+      return;
     }
   }
+
+  setAuthLoading(true);
+
+  try {
+    let authResult;
+
+    if (authMode === "signup") {
+      authResult = await signUpWithEmail({
+        email: normalizedEmail,
+        password: normalizedPassword,
+        name: profile.name.trim(),
+        transmission: profile.transmission,
+      });
+    } else {
+      authResult = await signInWithEmail({
+        email: normalizedEmail,
+        password: normalizedPassword,
+      });
+    }
+
+    if (authResult.error) {
+      setAuthError(authResult.error.message);
+      return;
+    }
+
+    const user = authResult.data?.user;
+    if (!user) {
+      setAuthError("No user came back from Supabase.");
+      return;
+    }
+
+    if (authMode === "signup") {
+      setPassword("");
+      setSignupSuccess(
+        "Account created. Check your email and confirm your address, then sign in."
+      );
+      setAuthMode("signin");
+      return;
+    }
+
+    setPassword("");
+    await hydrateUserData();
+  } catch (error) {
+    console.error(error);
+    setAuthError("Something went wrong signing you in.");
+  } finally {
+    setAuthLoading(false);
+  }
+}
 
   async function signOut() {
     try {
@@ -1597,17 +1601,18 @@ export default function App() {
     >
       <div className="mx-auto max-w-7xl px-3 py-4 sm:px-5 lg:px-8">
         {!profile.isSignedIn ? (
-          <LandingPage
-            profile={profile}
-            setProfile={setProfile}
-            authMode={authMode}
-            setAuthMode={setAuthMode}
-            onSubmit={handleAuthSubmit}
-            password={password}
-            setPassword={setPassword}
-            authError={authError}
-            authLoading={authLoading}
-          />
+        <LandingPage
+  profile={profile}
+  setProfile={setProfile}
+  authMode={authMode}
+  setAuthMode={setAuthMode}
+  onSubmit={handleAuthSubmit}
+  password={password}
+  setPassword={setPassword}
+  authError={authError}
+  signupSuccess={signupSuccess}
+  authLoading={authLoading}
+/>
         ) : (
           <>
             <Header
@@ -1766,6 +1771,7 @@ function LandingPage({
   password,
   setPassword,
   authError,
+  signupSuccess,
   authLoading,
 }) {
   return (
@@ -1940,7 +1946,18 @@ function LandingPage({
                 </div>
               </div>
             )}
-
+{signupSuccess ? (
+  <div
+    className="rounded-2xl px-4 py-3 text-sm"
+    style={{
+      backgroundColor: BRAND.greenLight,
+      color: BRAND.green,
+      border: `1px solid ${BRAND.border}`,
+    }}
+  >
+    {signupSuccess}
+  </div>
+) : null}
             {authError ? (
               <div
                 className="rounded-2xl px-4 py-3 text-sm"
